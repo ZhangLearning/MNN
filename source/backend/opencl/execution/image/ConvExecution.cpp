@@ -85,7 +85,7 @@ ConvExecution::ConvExecution(const std::vector<Tensor *> &inputs, const std::vec
     int outputChannel = conv2dCommonParams->outputCount();
     auto gpuType = mOpenCLBackend->getOpenCLRuntime()->getGpuType();
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-    mResource->mWeightUseBuffer = gpuType == GpuType::MALI;
+    mResource->mWeightUseBuffer = (gpuType == GpuType::MALI || gpuType == GpuType::SIETIUM);
 #endif
     
     int weightSize             = 0;
@@ -117,7 +117,7 @@ ConvExecution::ConvExecution(const std::vector<Tensor *> &inputs, const std::vec
     //select opt conv method
     std::string kernelName = "conv_2d_c4h1w4";
     if (kernelHeight == kernelWidth && kernelHeight == 1 && mPaddings[0] == 0 && mPaddings[1] == 0) {
-        mResource->mConv1x1Opt = (mResource->mStrides[0] == 1 && mResource->mStrides[1] == 1 && gpuType == GpuType::MALI && !mResource->mWeightUseBuffer);
+        mResource->mConv1x1Opt = (mResource->mStrides[0] == 1 && mResource->mStrides[1] == 1 && gpuType == GpuType::SIETIUM && !mResource->mWeightUseBuffer);
         if(mResource->mConv1x1Opt){
             kernelName = "conv_2d_1x1_mali";
         }else{

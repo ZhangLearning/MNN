@@ -65,11 +65,11 @@ CLRuntime::CLRuntime(const Backend::Info& info){
         mOpenCLRuntime.reset(new OpenCLRuntime(platform_size, platform_id, device_id, context_ptr, hint()));
         setGlobalCLRuntime(mOpenCLRuntime);
     }
-    
+
     //Whether runtimeError
     mCLRuntimeError = mOpenCLRuntime->isCreateError();
     mTunedInfo = new TuneInfo;
-    
+
     mImagePool.reset(new ImagePool(mOpenCLRuntime->context()));
     mBufferPool.reset(new BufferPool(mOpenCLRuntime->context(), CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR));
 }
@@ -586,7 +586,7 @@ Execution* OpenCLBackend::onCreate(const std::vector<Tensor*>& inputs, const std
             return NULL;
         }
     }
-
+    // MNN_PRINT("OpenCLBackend::onCreate memObject: %d, %s\n", mOpenCLRuntime->getGpuMemType(), op->name()->c_str());
     auto exe = iter->second->onCreate(inputs, outputs, op, this);
     if (NULL == exe) {
         mDivideOpRecord = true;
@@ -732,7 +732,7 @@ void OpenCLBackend::copyFromDeviceInt8(const Tensor* srcTensor, const Tensor* ds
 #endif
 
 #ifdef ENABLE_OPENCL_TIME_PROFILER
-    MNN_PRINT("total kernel time:%d us\n", (int)mOpenCLRuntime->mKernelTime);
+    MNN_PRINT("copyFromDeviceInt8 total kernel time:%d us\n", (int)mOpenCLRuntime->mKernelTime);
 #endif
 }
 
@@ -780,7 +780,7 @@ void CLRuntime::convertFromDevice(const Tensor* srcTensor, const Tensor* dstTens
                     MNN_PRINT("output data format not support for subgroup!\n");
                     break;
             }
-        } else 
+        } else
 #endif
         OpenCL::convertBufferToBuffer(const_cast<Tensor*>(srcTensor), const_cast<Tensor*>(dstTensor), mOpenCLRuntime.get(), precision, precision, precision, false, true, true, svmFlag);
     }
@@ -837,7 +837,7 @@ void OpenCLBackend::copyFromDevice(const Tensor* srcTensor, const Tensor* dstTen
     MNN::Tensor interTensor(dstTensor, dstTensor->getDimensionType(), false);
     interTensor.buffer().device = (uint64_t)mHostBuffer.second.get();
     TensorUtils::getDescribe(&interTensor)->dimensionFormat = dstDimensionFormat;
-    
+
     //Convert format
     mCLRuntime->convertFromDevice(srcTensor, (const Tensor*)&interTensor, dstDimensionFormat, mPrecision, mMemType, false);
     mOpenCLRuntime->printEventTime();
@@ -917,7 +917,7 @@ void OpenCLBackend::copyToDevice(const Tensor* srcTensor, const Tensor* dstTenso
         free(tmpPtr);
         return;
     }
-    
+
     bool directCopy =  BUFFER == mMemType
                        && (srcDimensionFormat == dstDimensionFormat || srcTensor->dimensions() <= 1)
                        && MNN_DATA_FORMAT_NC4HW4 != dstDimensionFormat && MNN_DATA_FORMAT_NC4HW4 != srcDimensionFormat
@@ -972,13 +972,13 @@ void OpenCLBackend::copyBetweenDevice(const Tensor* srcTensor, const Tensor* dst
         const Tensor* hostTensor = MNN_FORWARD_CPU != srcMemtype ? srcTensor : dstTensor;
         const Tensor* deviceTensor = MNN_FORWARD_CPU == srcMemtype ? srcTensor : dstTensor;
         MNN_DATA_FORMAT data_format = TensorUtils::getDescribe(deviceTensor)->dimensionFormat;
-        
+
         bool alloc_error = _allocHostBuffer(0, hostTensor);
         if(false == alloc_error){
             MNN_ERROR("Alloc _allocHostBuffer error\n");
             return;
         }
-        
+
         //Covert format
         if(MNN_FORWARD_CPU != srcMemtype){
             mCLRuntime->convertToDevice(hostTensor, deviceTensor, data_format, mPrecision, mMemType, false, srcMemtype);
@@ -1403,7 +1403,7 @@ void OpenCLBackend::recordKernel2d(const std::shared_ptr<KernelWrap> &kernelW, c
         }
         mRecordNums++;
     }
-    
+
     std::vector<uint32_t> internalGlobalWS = gws;
     for (size_t i = 0; i < 2; ++i) {
         internalGlobalWS[i] = ROUND_UP(gws[i], std::max((uint32_t)1, lws[i]));
@@ -1483,7 +1483,7 @@ void OpenCLBackend::recordKernel3d(const std::shared_ptr<KernelWrap> &kernelW, c
             kernel, cl::NullRange, cl::NDRange(internalGlobalWS[0], internalGlobalWS[1], internalGlobalWS[2]), cl::NDRange(lws[0], lws[1], lws[2]), nullptr, nullptr);
     }
     MNN_CHECK_CL_SUCCESS(res, "recordKernel3d");
-    
+
 #ifdef LOG_VERBOSE
     MNN_PRINT("end record3dKernel !\n");
 #endif

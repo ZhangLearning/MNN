@@ -159,11 +159,11 @@ void Llm::initRuntime() {
         mRuntimeManager->setCache(cacheFilePath + "/mnn_cachefile.bin");
     }
 }
-    
+
 static bool canSpecDecode(std::shared_ptr<Express::Module> module) {
     bool canSpec = false;
     auto info = module->getInfo();
-    // check from mnn model 
+    // check from mnn model
     for (int i=0; i<info->inputNames.size(); ++i) {
         auto& varInfo = info->inputs[i];
         if(info->inputNames[i] == "logits_index") {
@@ -198,7 +198,7 @@ void Llm::setSpeculativeConfig() {
             } else {
                 MNN_PRINT("Warning: draft_match_strictness value set error!, use default param instead\n");
             }
-            
+
             auto selectRule = mConfig->draft_selection_rule();
             mSelectRule = NgramSelectRule::FreqxLen_RULE;
             if(selectRule == "fcfs") {
@@ -236,7 +236,7 @@ void Llm::load() {
     // load single model
     mModules.resize(1);
     std::string model_path = mConfig->llm_model();
-    
+
     std::vector<std::string> inputNames {"input_ids", "attention_mask", "position_ids", "logits_index"};
     std::vector<std::string> outputNames {"logits"};
     if (mConfig->has_talker()) {
@@ -244,7 +244,7 @@ void Llm::load() {
     }
 
     mModules[0].reset(Module::load(inputNames, outputNames, model_path.c_str(), mRuntimeManager, &module_config));
-    
+
     // set speculative decoding params
     setSpeculativeConfig();
     int decode_type_num = 1;
@@ -258,7 +258,7 @@ void Llm::load() {
         mDecodeModules[v].reset(Module::clone(mModules[0].get()));
     }
     mPrefillModules = mModules;
-    
+
     // module input varp setting
     logitsLastIdx = _var<int>({-1}, {1});
     logitsAllIdx = _var<int>({0}, {1});
@@ -280,7 +280,7 @@ void Llm::load() {
                 }
             }
         }
-        
+
         mPositionIdsVarVec[i] = _Input({index}, NCHW, halide_type_of<int>());
     }
 }
@@ -330,7 +330,7 @@ void Llm::tuning(TuneType type, std::vector<int> candidates) {
         if (time < min_time) {
             prefer_candidate = candidate;
             min_time         = time;
-            // MNN_PRINT("op encode number:%d, decode time: %lld us\n", candidate, time);
+            MNN_PRINT("op encode number:%d, decode time: %lld us\n", candidate, time);
         }
     }
     mRuntimeManager->setHint(MNN::Interpreter::OP_ENCODER_NUMBER_FOR_COMMIT, prefer_candidate);
@@ -356,7 +356,7 @@ void Llm::setKVCacheInfo(size_t add, size_t remove, int* reserve, int n_reserve)
     if (remove > mMeta->previous) {
         remove = mMeta->previous;
     }
-    
+
     mMeta->remove = remove;
     mMeta->reserve = reserve;
     mMeta->n_reserve = n_reserve;
@@ -374,7 +374,7 @@ std::vector<Express::VARP> Llm::forwardRaw(Express::VARP hiddenState, Express::V
         logitsIndex = logitsLastIdx;
     }
     std::vector<Express::VARP> outputs;
-    
+
     if(mCurrentModules.size() > 1) {
         int module_index = hiddenState->getInfo()->dim[0] > 1 ? 1 : 0;
         outputs = mCurrentModules[module_index]->onForward({hiddenState, mask, inputPos, logitsIndex});
@@ -386,7 +386,7 @@ std::vector<Express::VARP> Llm::forwardRaw(Express::VARP hiddenState, Express::V
     }
     logits = outputs[0];
 
-    
+
 #if DEBUG_MODE == 3
     if(logits->getInfo()->dim[1] < 10 && logits->getInfo()->dim[1] >= 1) {
         for (int j = 0; j < logits->getInfo()->dim[1]; j++) {
@@ -404,7 +404,7 @@ std::vector<Express::VARP> Llm::forwardRaw(Express::VARP hiddenState, Express::V
                 }
                 MNN_PRINT("\nhiddenState statistic value:%6f, %6f, %6f\n", total, max_, min_);
             }
-            
+
             {
                 int length = mask->getInfo()->dim[3];
                 float total = 0.0;
@@ -621,6 +621,7 @@ void Llm::response(const std::string& user_content, std::ostream* os, const char
     if (mConfig->use_template()) {
         prompt = mPrompt->applyTemplate(user_content, true);
     }
+    std::cout << "Cur prompt: " << prompt << std::endl;
     std::vector<int> input_ids = tokenizer_encode(prompt);
 //    for(auto& ids : input_ids) {
 //        std::cout << tokenizer_decode(ids) << " -> " << ids << std::endl;
@@ -633,6 +634,7 @@ void Llm::response(const ChatMessages& chat_prompts, std::ostream* os, const cha
         return;
     }
     auto prompt = mPrompt->applyTemplate(chat_prompts);
+    std::cout << "Cur prompt: " << prompt << std::endl;
     std::vector<int> input_ids = tokenizer_encode(prompt);
     response(input_ids, os, end_with, max_new_tokens);
 }
@@ -724,7 +726,7 @@ VARP Llm::gen_attention_mask(int seq_len) {
                 return mAttentionMaskVarVec[1];
             }
         }
-        
+
         attentionMask = _Input({1, 1, seq_len, kv_seq_len}, NCHW, halide_type_of<float>());
         auto ptr = attentionMask->writeMap<float>();
         for (int i = 0; i < seq_len; i++) {
@@ -796,7 +798,7 @@ VARP Llm::gen_position_ids(int seq_len) {
             }
             return mPositionIdsVarVec[1];
         }
-        
+
         positionIds = _Input({seq_len}, NCHW, halide_type_of<int>());
         auto ptr = positionIds->writeMap<int>();
         if (seq_len == 1) {

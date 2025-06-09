@@ -537,7 +537,19 @@ __kernel void matmul_qk_div_mask_prefill(GLOBAL_SIZE_3_DIMS
         out1 = mad((float4)past_vec1.s1, query_vec1, out1);
         out1 = mad((float4)past_vec2.s1, query_vec2, out1);
         out1 = mad((float4)past_vec3.s1, query_vec3, out1);
+    }
+    for(int i = 0; i < head_dim / 4; ++i){
+        int i4 = i << 2;
+        float4 query_vec0 = convert_float4(vload4(0, query + query_offset + i4 * query_seq_len4));
+        float4 query_vec1 = convert_float4(vload4(0, query + query_offset + (i4 + 1) * query_seq_len4));
+        float4 query_vec2 = convert_float4(vload4(0, query + query_offset + (i4 + 2) * query_seq_len4));
+        float4 query_vec3 = convert_float4(vload4(0, query + query_offset + (i4 + 3) * query_seq_len4));
         
+        float4 past_vec0 = convert_float4(vload4(0, past_key + past_offset + i4 * max_len));
+        float4 past_vec1 = convert_float4(vload4(0, past_key + past_offset + (i4 + 1) * max_len));
+        float4 past_vec2 = convert_float4(vload4(0, past_key + past_offset + (i4 + 2) * max_len));
+        float4 past_vec3 = convert_float4(vload4(0, past_key + past_offset + (i4 + 3) * max_len));
+
         out2 = mad((float4)past_vec0.s2, query_vec0, out2);
         out2 = mad((float4)past_vec1.s2, query_vec1, out2);
         out2 = mad((float4)past_vec2.s2, query_vec2, out2);

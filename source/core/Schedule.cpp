@@ -154,7 +154,8 @@ MNNForwardType Schedule::getAppropriateType(const ScheduleConfig& config) {
             }
         }
     }
-    
+
+    MNN_PRINT("<<<<<< Use type=%d backend. >>>>>>\n", type);
 
     return type;
 }

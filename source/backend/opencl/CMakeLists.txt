@@ -8,6 +8,9 @@
 #add_custom_target (MNN_CLCodeGen DEPENDS "${CMAKE_CURRENT_LIST_DIR}/execution/cl/")
 file(GLOB_RECURSE MNN_OpenCL_SRC ${CMAKE_CURRENT_LIST_DIR}/*)
 
+
+add_definitions(-DOPENCL_FALLBACK_LOG)
+
 option(MNN_OPENCL_SIZE_CUT "Disable MNN OpenCL Buffer Opt" OFF)
 
 IF (MNN_GPU_TIME_PROFILE)
@@ -19,19 +22,22 @@ IF (MNN_OPENCL_SIZE_CUT)
 ENDIF()
 
 
+
 if (${CMAKE_SYSTEM_NAME} MATCHES "Android")
     add_definitions(-DMNN_USE_LIB_WRAPPER)
     add_definitions(-DMNN_OPENCL_SVM_ENABLE)
     add_definitions(-DCL_HPP_TARGET_OPENCL_VERSION=110)
 else()
-    if(${CMAKE_SYSTEM_NAME} MATCHES "Windows" OR ${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR MNN_SUPPORT_INTEL_SUBGROUP)
-        add_definitions(-DMNN_SUPPORT_INTEL_SUBGROUP)
-    endif()
+    # if(${CMAKE_SYSTEM_NAME} MATCHES "Windows" OR ${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR MNN_SUPPORT_INTEL_SUBGROUP)
+    #     add_definitions(-DMNN_SUPPORT_INTEL_SUBGROUP)
+    # endif()
     if (MNN_USE_SYSTEM_LIB)
         find_package(OpenCL REQUIRED)
     else()
         add_definitions(-DMNN_USE_LIB_WRAPPER)
-        add_definitions(-DMNN_OPENCL_SVM_ENABLE)
+        # option(MNN_USE_LIB_WRAPPER "Use opencl library wrapper" OFF) # 根据需要
+        # add_definitions(-DMNN_OPENCL_SVM_ENABLE)
+        # option(MNN_OPENCL_SVM_ENABLE "Use opencl svm" OFF) # 根据需要
         add_definitions(-DCL_HPP_TARGET_OPENCL_VERSION=110)
     endif()
 endif()

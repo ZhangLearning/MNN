@@ -294,36 +294,6 @@ __kernel void gemm_b4_c8_int4_buf(GLOBAL_SIZE_DIM2
                     out2 = mad((COMPUTE_FLOAT8)in2.s0, wei, out2);
                     #endif
                 }
-                {
-                    UCHAR4_TO_FLOAT8(charWeightsInt40.s4567, scale, offset);
-                    out0 = mad((COMPUTE_FLOAT8)in0.s1, wei, out0);
-                    #if INPUT_BATCH_LEAVES_NUM >= 2
-                    out1 = mad((COMPUTE_FLOAT8)in1.s1, wei, out1);
-                    #endif
-                    #if INPUT_BATCH_LEAVES_NUM >= 3
-                    out2 = mad((COMPUTE_FLOAT8)in2.s1, wei, out2);
-                    #endif
-                }
-                {
-                    UCHAR4_TO_FLOAT8(charWeightsInt40.s89ab, scale, offset);
-                    out0 = mad((COMPUTE_FLOAT8)in0.s2, wei, out0);
-                    #if INPUT_BATCH_LEAVES_NUM >= 2
-                    out1 = mad((COMPUTE_FLOAT8)in1.s2, wei, out1);
-                    #endif
-                    #if INPUT_BATCH_LEAVES_NUM >= 3
-                    out2 = mad((COMPUTE_FLOAT8)in2.s2, wei, out2);
-                    #endif
-                }
-                {
-                    UCHAR4_TO_FLOAT8(charWeightsInt40.scdef, scale, offset);
-                    out0 = mad((COMPUTE_FLOAT8)in0.s3, wei, out0);
-                    #if INPUT_BATCH_LEAVES_NUM >= 2
-                    out1 = mad((COMPUTE_FLOAT8)in1.s3, wei, out1);
-                    #endif
-                    #if INPUT_BATCH_LEAVES_NUM >= 3
-                    out2 = mad((COMPUTE_FLOAT8)in2.s3, wei, out2);
-                    #endif
-                }
             }
             #if INPUT_CHANNEL_LEAVES_NUM != 0
             {
@@ -351,6 +321,120 @@ __kernel void gemm_b4_c8_int4_buf(GLOBAL_SIZE_DIM2
                     out2 = mad((COMPUTE_FLOAT8)in2.s0, wei, out2);
                     #endif
                 }
+            }
+            #endif
+        }
+    } else {
+#endif
+    for (int i = 0; i < blockNum; i++){
+        #ifdef ASYMMETRIC
+        COMPUTE_FLOAT8 scale, offset;
+        {
+            COMPUTE_FLOAT16 scaleOffset = CONVERT_COMPUTE_FLOAT16(convert_float16(vload16(0, dequantScaleOffset + (out_c_idx << 3) + i * dstChannelAlign * 2)) / coef);
+            scale = scaleOffset.s02468ace;
+            offset = scaleOffset.s13579bdf;
+        }
+        #else
+        COMPUTE_FLOAT8 scale = CONVERT_COMPUTE_FLOAT8(convert_float8(vload8(0, dequantScaleOffset + (out_c_idx << 2) + i * dstChannelAlign)) / coef);
+        COMPUTE_FLOAT8 offset = 0;
+        #endif
+        for (int j = 0; j < loop_end; j++) {
+            int k = i * loop + j;
+            COMPUTE_FLOAT8 wei;
+            COMPUTE_FLOAT16 in = CONVERT_COMPUTE_FLOAT16(vload16(0, input + input_offset + k * bhw4));
+            #ifdef USE_IMAGE
+            uchar16 charWeightsInt40 = as_uchar16(read_imagei(weight, SAMPLER, (int2)(k, y)));
+            #else
+            uchar16 charWeightsInt40 = vload16(k, weight + weight_offset);
+            #endif
+            {
+                UCHAR4_TO_FLOAT8(charWeightsInt40.s0123, scale, offset);
+                out0 = mad((COMPUTE_FLOAT8)in.s0, wei, out0);
+                out1 = mad((COMPUTE_FLOAT8)in.s4, wei, out1);
+                out2 = mad((COMPUTE_FLOAT8)in.s8, wei, out2);
+                out3 = mad((COMPUTE_FLOAT8)in.sc, wei, out3);
+            }
+        }
+        #if INPUT_CHANNEL_LEAVES_NUM != 0
+        {
+            int k = i * loop + loop_end;
+            COMPUTE_FLOAT8 wei;
+            COMPUTE_FLOAT16 in = CONVERT_COMPUTE_FLOAT16(vload16(0, input + input_offset + k * bhw4));
+            #ifdef USE_IMAGE
+            uchar16 charWeightsInt40 = as_uchar16(read_imagei(weight, SAMPLER, (int2)(k, y)));
+            #else
+            uchar16 charWeightsInt40 = vload16(k, weight + weight_offset);
+            #endif
+            {
+                UCHAR4_TO_FLOAT8(charWeightsInt40.s0123, scale, offset);
+                out0 = mad((COMPUTE_FLOAT8)in.s0, wei, out0);
+                out1 = mad((COMPUTE_FLOAT8)in.s4, wei, out1);
+                out2 = mad((COMPUTE_FLOAT8)in.s8, wei, out2);
+                out3 = mad((COMPUTE_FLOAT8)in.sc, wei, out3);
+            }
+        }
+        #endif
+    }
+#if INPUT_BATCH_LEAVES_NUM != 0
+    }
+#endif
+
+#if INPUT_BATCH_LEAVES_NUM != 0
+    if(out_b_idx + 3 >= bhw){
+        for (int i = 0; i < blockNum; i++){
+            #ifdef ASYMMETRIC
+            COMPUTE_FLOAT8 scale, offset;
+            {
+                COMPUTE_FLOAT16 scaleOffset = CONVERT_COMPUTE_FLOAT16(convert_float16(vload16(0, dequantScaleOffset + (out_c_idx << 3) + i * dstChannelAlign * 2)) / coef);
+                scale = scaleOffset.s02468ace;
+                offset = scaleOffset.s13579bdf;
+            }
+            #else
+            COMPUTE_FLOAT8 scale = CONVERT_COMPUTE_FLOAT8(convert_float8(vload8(0, dequantScaleOffset + (out_c_idx << 2) + i * dstChannelAlign)) / coef);
+            COMPUTE_FLOAT8 offset = 0;
+            #endif
+            for (int j = 0; j < loop_end; j++) {
+                int k = i * loop + j;
+                COMPUTE_FLOAT8 wei;
+                #ifdef USE_IMAGE
+                uchar16 charWeightsInt40 = as_uchar16(read_imagei(weight, SAMPLER, (int2)(k, y)));
+                #else
+                uchar16 charWeightsInt40 = vload16(k, weight + weight_offset);
+                #endif
+                COMPUTE_FLOAT4 in0 = CONVERT_COMPUTE_FLOAT4(vload4(0, input + input_offset + k * bhw4));
+                #if INPUT_BATCH_LEAVES_NUM >= 2
+                COMPUTE_FLOAT4 in1 = CONVERT_COMPUTE_FLOAT4(vload4(0, input + input_offset + k * bhw4 + 4));
+                #endif
+                #if INPUT_BATCH_LEAVES_NUM >= 3
+                COMPUTE_FLOAT4 in2 = CONVERT_COMPUTE_FLOAT4(vload4(0, input + input_offset + k * bhw4 + 8));
+                #endif
+                {
+                    UCHAR4_TO_FLOAT8(charWeightsInt40.s4567, scale, offset);
+                    out0 = mad((COMPUTE_FLOAT8)in0.s1, wei, out0);
+                    #if INPUT_BATCH_LEAVES_NUM >= 2
+                    out1 = mad((COMPUTE_FLOAT8)in1.s1, wei, out1);
+                    #endif
+                    #if INPUT_BATCH_LEAVES_NUM >= 3
+                    out2 = mad((COMPUTE_FLOAT8)in2.s1, wei, out2);
+                    #endif
+                }
+            }
+            #if INPUT_CHANNEL_LEAVES_NUM != 0
+            {
+                int k = i * loop + loop_end;
+                COMPUTE_FLOAT8 wei;
+                COMPUTE_FLOAT4 in0 = CONVERT_COMPUTE_FLOAT4(vload4(0, input + input_offset + k * bhw4));
+                #if INPUT_BATCH_LEAVES_NUM >= 2
+                COMPUTE_FLOAT4 in1 = CONVERT_COMPUTE_FLOAT4(vload4(0, input + input_offset + k * bhw4 + 4));
+                #endif
+                #if INPUT_BATCH_LEAVES_NUM >= 3
+                COMPUTE_FLOAT4 in2 = CONVERT_COMPUTE_FLOAT4(vload4(0, input + input_offset + k * bhw4 + 8));
+                #endif
+                #ifdef USE_IMAGE
+                uchar16 charWeightsInt40 = as_uchar16(read_imagei(weight, SAMPLER, (int2)(k, y)));
+                #else
+                uchar16 charWeightsInt40 = vload16(k, weight + weight_offset);
+                #endif
                 #if INPUT_CHANNEL_LEAVES_NUM >= 2
                 {
                     UCHAR4_TO_FLOAT8(charWeightsInt40.s4567, scale, offset);
@@ -362,6 +446,122 @@ __kernel void gemm_b4_c8_int4_buf(GLOBAL_SIZE_DIM2
                     out2 = mad((COMPUTE_FLOAT8)in2.s1, wei, out2);
                     #endif
                 }
+                #endif
+            }
+            #endif
+        }
+    } else {
+#endif
+    for (int i = 0; i < blockNum; i++){
+        #ifdef ASYMMETRIC
+        COMPUTE_FLOAT8 scale, offset;
+        {
+            COMPUTE_FLOAT16 scaleOffset = CONVERT_COMPUTE_FLOAT16(convert_float16(vload16(0, dequantScaleOffset + (out_c_idx << 3) + i * dstChannelAlign * 2)) / coef);
+            scale = scaleOffset.s02468ace;
+            offset = scaleOffset.s13579bdf;
+        }
+        #else
+        COMPUTE_FLOAT8 scale = CONVERT_COMPUTE_FLOAT8(convert_float8(vload8(0, dequantScaleOffset + (out_c_idx << 2) + i * dstChannelAlign)) / coef);
+        COMPUTE_FLOAT8 offset = 0;
+        #endif
+        for (int j = 0; j < loop_end; j++) {
+            int k = i * loop + j;
+            COMPUTE_FLOAT8 wei;
+            COMPUTE_FLOAT16 in = CONVERT_COMPUTE_FLOAT16(vload16(0, input + input_offset + k * bhw4));
+            #ifdef USE_IMAGE
+            uchar16 charWeightsInt40 = as_uchar16(read_imagei(weight, SAMPLER, (int2)(k, y)));
+            #else
+            uchar16 charWeightsInt40 = vload16(k, weight + weight_offset);
+            #endif
+            {
+                UCHAR4_TO_FLOAT8(charWeightsInt40.s4567, scale, offset);
+                out0 = mad((COMPUTE_FLOAT8)in.s1, wei, out0);
+                out1 = mad((COMPUTE_FLOAT8)in.s5, wei, out1);
+                out2 = mad((COMPUTE_FLOAT8)in.s9, wei, out2);
+                out3 = mad((COMPUTE_FLOAT8)in.sd, wei, out3);
+            }
+        }
+        #if INPUT_CHANNEL_LEAVES_NUM != 0
+        {
+            int k = i * loop + loop_end;
+            COMPUTE_FLOAT8 wei;
+            COMPUTE_FLOAT16 in = CONVERT_COMPUTE_FLOAT16(vload16(0, input + input_offset + k * bhw4));
+            #ifdef USE_IMAGE
+            uchar16 charWeightsInt40 = as_uchar16(read_imagei(weight, SAMPLER, (int2)(k, y)));
+            #else
+            uchar16 charWeightsInt40 = vload16(k, weight + weight_offset);
+            #endif
+            #if INPUT_CHANNEL_LEAVES_NUM >= 2
+            {
+                UCHAR4_TO_FLOAT8(charWeightsInt40.s4567, scale, offset);
+                out0 = mad((COMPUTE_FLOAT8)in.s1, wei, out0);
+                out1 = mad((COMPUTE_FLOAT8)in.s5, wei, out1);
+                out2 = mad((COMPUTE_FLOAT8)in.s9, wei, out2);
+                out3 = mad((COMPUTE_FLOAT8)in.sd, wei, out3);
+            }
+            #endif
+        }
+        #endif
+    }
+#if INPUT_BATCH_LEAVES_NUM != 0
+    }
+#endif
+
+#if INPUT_BATCH_LEAVES_NUM != 0
+    if(out_b_idx + 3 >= bhw){
+        for (int i = 0; i < blockNum; i++){
+            #ifdef ASYMMETRIC
+            COMPUTE_FLOAT8 scale, offset;
+            {
+                COMPUTE_FLOAT16 scaleOffset = CONVERT_COMPUTE_FLOAT16(convert_float16(vload16(0, dequantScaleOffset + (out_c_idx << 3) + i * dstChannelAlign * 2)) / coef);
+                scale = scaleOffset.s02468ace;
+                offset = scaleOffset.s13579bdf;
+            }
+            #else
+            COMPUTE_FLOAT8 scale = CONVERT_COMPUTE_FLOAT8(convert_float8(vload8(0, dequantScaleOffset + (out_c_idx << 2) + i * dstChannelAlign)) / coef);
+            COMPUTE_FLOAT8 offset = 0;
+            #endif
+            for (int j = 0; j < loop_end; j++) {
+                int k = i * loop + j;
+                COMPUTE_FLOAT8 wei;
+                #ifdef USE_IMAGE
+                uchar16 charWeightsInt40 = as_uchar16(read_imagei(weight, SAMPLER, (int2)(k, y)));
+                #else
+                uchar16 charWeightsInt40 = vload16(k, weight + weight_offset);
+                #endif
+                COMPUTE_FLOAT4 in0 = CONVERT_COMPUTE_FLOAT4(vload4(0, input + input_offset + k * bhw4));
+                #if INPUT_BATCH_LEAVES_NUM >= 2
+                COMPUTE_FLOAT4 in1 = CONVERT_COMPUTE_FLOAT4(vload4(0, input + input_offset + k * bhw4 + 4));
+                #endif
+                #if INPUT_BATCH_LEAVES_NUM >= 3
+                COMPUTE_FLOAT4 in2 = CONVERT_COMPUTE_FLOAT4(vload4(0, input + input_offset + k * bhw4 + 8));
+                #endif
+                {
+                    UCHAR4_TO_FLOAT8(charWeightsInt40.s89ab, scale, offset);
+                    out0 = mad((COMPUTE_FLOAT8)in0.s2, wei, out0);
+                    #if INPUT_BATCH_LEAVES_NUM >= 2
+                    out1 = mad((COMPUTE_FLOAT8)in1.s2, wei, out1);
+                    #endif
+                    #if INPUT_BATCH_LEAVES_NUM >= 3
+                    out2 = mad((COMPUTE_FLOAT8)in2.s2, wei, out2);
+                    #endif
+                }
+            }
+            #if INPUT_CHANNEL_LEAVES_NUM != 0
+            {
+                int k = i * loop + loop_end;
+                COMPUTE_FLOAT8 wei;
+                COMPUTE_FLOAT4 in0 = CONVERT_COMPUTE_FLOAT4(vload4(0, input + input_offset + k * bhw4));
+                #if INPUT_BATCH_LEAVES_NUM >= 2
+                COMPUTE_FLOAT4 in1 = CONVERT_COMPUTE_FLOAT4(vload4(0, input + input_offset + k * bhw4 + 4));
+                #endif
+                #if INPUT_BATCH_LEAVES_NUM >= 3
+                COMPUTE_FLOAT4 in2 = CONVERT_COMPUTE_FLOAT4(vload4(0, input + input_offset + k * bhw4 + 8));
+                #endif
+                #ifdef USE_IMAGE
+                uchar16 charWeightsInt40 = as_uchar16(read_imagei(weight, SAMPLER, (int2)(k, y)));
+                #else
+                uchar16 charWeightsInt40 = vload16(k, weight + weight_offset);
                 #endif
                 #if INPUT_CHANNEL_LEAVES_NUM >= 3
                 {
@@ -402,19 +602,24 @@ __kernel void gemm_b4_c8_int4_buf(GLOBAL_SIZE_DIM2
             uchar16 charWeightsInt40 = vload16(k, weight + weight_offset);
             #endif
             {
-                UCHAR4_TO_FLOAT8(charWeightsInt40.s0123, scale, offset);
-                out0 = mad((COMPUTE_FLOAT8)in.s0, wei, out0);
-                out1 = mad((COMPUTE_FLOAT8)in.s4, wei, out1);
-                out2 = mad((COMPUTE_FLOAT8)in.s8, wei, out2);
-                out3 = mad((COMPUTE_FLOAT8)in.sc, wei, out3);
+                UCHAR4_TO_FLOAT8(charWeightsInt40.s89ab, scale, offset);
+                out0 = mad((COMPUTE_FLOAT8)in.s2, wei, out0);
+                out1 = mad((COMPUTE_FLOAT8)in.s6, wei, out1);
+                out2 = mad((COMPUTE_FLOAT8)in.sa, wei, out2);
+                out3 = mad((COMPUTE_FLOAT8)in.se, wei, out3);
             }
-            {
-                UCHAR4_TO_FLOAT8(charWeightsInt40.s4567, scale, offset);
-                out0 = mad((COMPUTE_FLOAT8)in.s1, wei, out0);
-                out1 = mad((COMPUTE_FLOAT8)in.s5, wei, out1);
-                out2 = mad((COMPUTE_FLOAT8)in.s9, wei, out2);
-                out3 = mad((COMPUTE_FLOAT8)in.sd, wei, out3);
-            }
+        }
+        #if INPUT_CHANNEL_LEAVES_NUM != 0
+        {
+            int k = i * loop + loop_end;
+            COMPUTE_FLOAT8 wei;
+            COMPUTE_FLOAT16 in = CONVERT_COMPUTE_FLOAT16(vload16(0, input + input_offset + k * bhw4));
+            #ifdef USE_IMAGE
+            uchar16 charWeightsInt40 = as_uchar16(read_imagei(weight, SAMPLER, (int2)(k, y)));
+            #else
+            uchar16 charWeightsInt40 = vload16(k, weight + weight_offset);
+            #endif
+            #if INPUT_CHANNEL_LEAVES_NUM >= 3
             {
                 UCHAR4_TO_FLOAT8(charWeightsInt40.s89ab, scale, offset);
                 out0 = mad((COMPUTE_FLOAT8)in.s2, wei, out0);
@@ -422,6 +627,96 @@ __kernel void gemm_b4_c8_int4_buf(GLOBAL_SIZE_DIM2
                 out2 = mad((COMPUTE_FLOAT8)in.sa, wei, out2);
                 out3 = mad((COMPUTE_FLOAT8)in.se, wei, out3);
             }
+            #endif
+        }
+        #endif
+    }
+#if INPUT_BATCH_LEAVES_NUM != 0
+    }
+#endif
+
+#if INPUT_BATCH_LEAVES_NUM != 0
+    if(out_b_idx + 3 >= bhw){
+        for (int i = 0; i < blockNum; i++){
+            #ifdef ASYMMETRIC
+            COMPUTE_FLOAT8 scale, offset;
+            {
+                COMPUTE_FLOAT16 scaleOffset = CONVERT_COMPUTE_FLOAT16(convert_float16(vload16(0, dequantScaleOffset + (out_c_idx << 3) + i * dstChannelAlign * 2)) / coef);
+                scale = scaleOffset.s02468ace;
+                offset = scaleOffset.s13579bdf;
+            }
+            #else
+            COMPUTE_FLOAT8 scale = CONVERT_COMPUTE_FLOAT8(convert_float8(vload8(0, dequantScaleOffset + (out_c_idx << 2) + i * dstChannelAlign)) / coef);
+            COMPUTE_FLOAT8 offset = 0;
+            #endif
+            for (int j = 0; j < loop_end; j++) {
+                int k = i * loop + j;
+                COMPUTE_FLOAT8 wei;
+                #ifdef USE_IMAGE
+                uchar16 charWeightsInt40 = as_uchar16(read_imagei(weight, SAMPLER, (int2)(k, y)));
+                #else
+                uchar16 charWeightsInt40 = vload16(k, weight + weight_offset);
+                #endif
+                COMPUTE_FLOAT4 in0 = CONVERT_COMPUTE_FLOAT4(vload4(0, input + input_offset + k * bhw4));
+                #if INPUT_BATCH_LEAVES_NUM >= 2
+                COMPUTE_FLOAT4 in1 = CONVERT_COMPUTE_FLOAT4(vload4(0, input + input_offset + k * bhw4 + 4));
+                #endif
+                #if INPUT_BATCH_LEAVES_NUM >= 3
+                COMPUTE_FLOAT4 in2 = CONVERT_COMPUTE_FLOAT4(vload4(0, input + input_offset + k * bhw4 + 8));
+                #endif
+                {
+                    UCHAR4_TO_FLOAT8(charWeightsInt40.scdef, scale, offset);
+                    out0 = mad((COMPUTE_FLOAT8)in0.s3, wei, out0);
+                    #if INPUT_BATCH_LEAVES_NUM >= 2
+                    out1 = mad((COMPUTE_FLOAT8)in1.s3, wei, out1);
+                    #endif
+                    #if INPUT_BATCH_LEAVES_NUM >= 3
+                    out2 = mad((COMPUTE_FLOAT8)in2.s3, wei, out2);
+                    #endif
+                }
+            }
+            #if INPUT_CHANNEL_LEAVES_NUM != 0
+            {
+                int k = i * loop + loop_end;
+                COMPUTE_FLOAT8 wei;
+                COMPUTE_FLOAT4 in0 = CONVERT_COMPUTE_FLOAT4(vload4(0, input + input_offset + k * bhw4));
+                #if INPUT_BATCH_LEAVES_NUM >= 2
+                COMPUTE_FLOAT4 in1 = CONVERT_COMPUTE_FLOAT4(vload4(0, input + input_offset + k * bhw4 + 4));
+                #endif
+                #if INPUT_BATCH_LEAVES_NUM >= 3
+                COMPUTE_FLOAT4 in2 = CONVERT_COMPUTE_FLOAT4(vload4(0, input + input_offset + k * bhw4 + 8));
+                #endif
+                #ifdef USE_IMAGE
+                uchar16 charWeightsInt40 = as_uchar16(read_imagei(weight, SAMPLER, (int2)(k, y)));
+                #else
+                uchar16 charWeightsInt40 = vload16(k, weight + weight_offset);
+                #endif
+            }
+            #endif
+        }
+    } else {
+#endif
+    for (int i = 0; i < blockNum; i++){
+        #ifdef ASYMMETRIC
+        COMPUTE_FLOAT8 scale, offset;
+        {
+            COMPUTE_FLOAT16 scaleOffset = CONVERT_COMPUTE_FLOAT16(convert_float16(vload16(0, dequantScaleOffset + (out_c_idx << 3) + i * dstChannelAlign * 2)) / coef);
+            scale = scaleOffset.s02468ace;
+            offset = scaleOffset.s13579bdf;
+        }
+        #else
+        COMPUTE_FLOAT8 scale = CONVERT_COMPUTE_FLOAT8(convert_float8(vload8(0, dequantScaleOffset + (out_c_idx << 2) + i * dstChannelAlign)) / coef);
+        COMPUTE_FLOAT8 offset = 0;
+        #endif
+        for (int j = 0; j < loop_end; j++) {
+            int k = i * loop + j;
+            COMPUTE_FLOAT8 wei;
+            COMPUTE_FLOAT16 in = CONVERT_COMPUTE_FLOAT16(vload16(0, input + input_offset + k * bhw4));
+            #ifdef USE_IMAGE
+            uchar16 charWeightsInt40 = as_uchar16(read_imagei(weight, SAMPLER, (int2)(k, y)));
+            #else
+            uchar16 charWeightsInt40 = vload16(k, weight + weight_offset);
+            #endif
             {
                 UCHAR4_TO_FLOAT8(charWeightsInt40.scdef, scale, offset);
                 out0 = mad((COMPUTE_FLOAT8)in.s3, wei, out0);
@@ -440,38 +735,13 @@ __kernel void gemm_b4_c8_int4_buf(GLOBAL_SIZE_DIM2
             #else
             uchar16 charWeightsInt40 = vload16(k, weight + weight_offset);
             #endif
-            {
-                UCHAR4_TO_FLOAT8(charWeightsInt40.s0123, scale, offset);
-                out0 = mad((COMPUTE_FLOAT8)in.s0, wei, out0);
-                out1 = mad((COMPUTE_FLOAT8)in.s4, wei, out1);
-                out2 = mad((COMPUTE_FLOAT8)in.s8, wei, out2);
-                out3 = mad((COMPUTE_FLOAT8)in.sc, wei, out3);
-            }
-            #if INPUT_CHANNEL_LEAVES_NUM >= 2
-            {
-                UCHAR4_TO_FLOAT8(charWeightsInt40.s4567, scale, offset);
-                out0 = mad((COMPUTE_FLOAT8)in.s1, wei, out0);
-                out1 = mad((COMPUTE_FLOAT8)in.s5, wei, out1);
-                out2 = mad((COMPUTE_FLOAT8)in.s9, wei, out2);
-                out3 = mad((COMPUTE_FLOAT8)in.sd, wei, out3);
-            }
-            #endif
-            #if INPUT_CHANNEL_LEAVES_NUM >= 3
-            {
-                UCHAR4_TO_FLOAT8(charWeightsInt40.s89ab, scale, offset);
-                out0 = mad((COMPUTE_FLOAT8)in.s2, wei, out0);
-                out1 = mad((COMPUTE_FLOAT8)in.s6, wei, out1);
-                out2 = mad((COMPUTE_FLOAT8)in.sa, wei, out2);
-                out3 = mad((COMPUTE_FLOAT8)in.se, wei, out3);
-            }
-            #endif
         }
         #endif
     }
 #if INPUT_BATCH_LEAVES_NUM != 0
     }
 #endif
-    
+
 #ifdef RELU
     out0 = fmax(out0, (COMPUTE_FLOAT8)0);
     out1 = fmax(out1, (COMPUTE_FLOAT8)0);

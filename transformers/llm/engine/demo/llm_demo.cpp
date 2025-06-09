@@ -16,6 +16,11 @@
 #ifdef LLM_SUPPORT_AUDIO
 #include "audio/audio.hpp"
 #endif
+#include <iostream>
+#include <iomanip>
+#include <chrono>
+#include <ctime>
+#include <thread>
 using namespace MNN::Transformer;
 
 static void tuning_prepare(Llm* llm) {
@@ -67,6 +72,20 @@ std::vector<std::vector<std::string>> parse_csv(const std::vector<std::string>& 
     return csv_data;
 }
 
+// 函数：获取并打印当前时间
+void printCurrentTime() {
+    // 获取当前时间点（自纪元以来的时间）
+    auto now = std::chrono::system_clock::now();
+    // 将时间点转换为 time_t 类型，以便使用标准 C 时间函数
+    std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
+    // 将 time_t 转换为 tm 结构，以便格式化输出
+    std::tm* local_tm = std::localtime(&now_time_t);
+    // 打印当前时间，格式为 YYYY-MM-DD HH:MM:SS
+    std::cout << "当前时间: "
+              << std::put_time(local_tm, "%Y-%m-%d %H:%M:%S")
+              << std::endl;
+}
+
 static int benchmark(Llm* llm, const std::vector<std::string>& prompts, int max_token_number) {
     int prompt_len = 0;
     int decode_len = 0;
@@ -93,6 +112,8 @@ static int benchmark(Llm* llm, const std::vector<std::string>& prompts, int max_
         return true;
     });
 #endif
+    // 调用函数以打印当前时间
+    printCurrentTime();
     for (int i = 0; i < prompts.size(); i++) {
         const auto& prompt = prompts[i];
 
@@ -138,8 +159,13 @@ static int benchmark(Llm* llm, const std::vector<std::string>& prompts, int max_
     printf("prefill speed = %.2f tok/s\n", prompt_len / prefill_s);
     printf(" decode speed = %.2f tok/s\n", decode_len / decode_s);
     printf("##################################\n");
+
+    // 调用函数以打印当前时间
+    printCurrentTime();
     return 0;
 }
+
+
 
 static int ceval(Llm* llm, const std::vector<std::string>& lines, std::string filename) {
     auto csv_data = parse_csv(lines);

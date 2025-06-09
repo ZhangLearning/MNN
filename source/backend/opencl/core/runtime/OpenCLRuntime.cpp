@@ -91,7 +91,7 @@ OpenCLRuntime::OpenCLRuntime(int platformSize, int platformId, int deviceId, voi
                 {"Mali-G710", {VALHALL, TOP}},
                 {"Mali-G715", {VALHALL, TOP}},
             };
-        
+
             const std::string deviceVendor  = mFirstGPUDevicePtr->getInfo<CL_DEVICE_VENDOR>();
             cl_command_queue_properties properties = 0;
 
@@ -102,7 +102,7 @@ OpenCLRuntime::OpenCLRuntime(int platformSize, int platformId, int deviceId, voi
             // if device is QUALCOMM's and version is 2.0 , set spacial optimized param
 
             sscanf(deviceVersion.c_str(), "%*s%f%*s", &mCLVersion);
-            
+
         #ifdef MNN_OPENCL_SVM_ENABLE
             if(mCLVersion > 1.99f && (false == OpenCLSymbolsOperator::getOpenclSymbolsPtr()->isSvmError())) {
                 res = mFirstGPUDevicePtr->getInfo(CL_DEVICE_SVM_CAPABILITIES, &mSvmCapabilities);
@@ -123,10 +123,10 @@ OpenCLRuntime::OpenCLRuntime(int platformSize, int platformId, int deviceId, voi
                 #endif
             }
         #endif
-            
+
             if (deviceName.find("QUALCOMM Adreno") != std::string::npos || deviceName.find("Qualcomm") != std::string::npos) {
                 mGpuType = ADRENO;
-                
+
                 // if device is QUALCOMM's and version is 2.0 , set spacial optimized param
                 //if Adreno version is less than Adreno512, donot set WorkGroupAttribute option
                 std::string adrenoVersion = deviceVersion.substr(deviceVersion.size()-3);
@@ -167,7 +167,9 @@ OpenCLRuntime::OpenCLRuntime(int platformSize, int platformId, int deviceId, voi
                     uint32_t maxThreadsPerExecutionUnit = num_threads_per_eu > 0 ? num_threads_per_eu : 7;
                     mMaxThreadsPerDevice =  maxThreadsPerExecutionUnit * execution_units_count;
                 }
-#endif 
+#endif
+            } else if (deviceVendor.find("Sietium") != std::string::npos) {
+                mGpuType = SIETIUM;
             }
             else {
                 mGpuType = OTHER;
@@ -212,9 +214,9 @@ OpenCLRuntime::OpenCLRuntime(int platformSize, int platformId, int deviceId, voi
                 mIsCreateError = true;
                 return;
             }
-            
+
             mIsDeviceSupportedLowPower = (mIsDeviceSupportedLowPower || isPriorityHint);
-            
+
             #ifdef MNN_USE_LIB_WRAPPER
             if(isPriorityHint)
             {
@@ -262,17 +264,17 @@ OpenCLRuntime::OpenCLRuntime(int platformSize, int platformId, int deviceId, voi
                 bool checkFp16Exetension = getDeviceSupportsExtension(*(mFirstGPUDevicePtr.get()), "cl_khr_fp16");
                 mIsSupportedFP16 = (mIsSupportedFP16 && checkFp16Exetension);
             }
-            
+
             if(getDeviceSupportsExtension(*(mFirstGPUDevicePtr.get()), "cl_arm_integer_dot_product_int8")){
                 mSupportDotInt8 = true;
             }
             if(getDeviceSupportsExtension(*(mFirstGPUDevicePtr.get()), "cl_arm_integer_dot_product_accumulate_int8")){
                 mSupportDotAccInt8 = true;
             }
-          
+
 #if !defined(ENABLE_OPENCL_TIME_PROFILER) && defined(MNN_USE_LIB_WRAPPER)
             {
-                if((false == OpenCLSymbolsOperator::getOpenclSymbolsPtr()->isQcomError()) 
+                if((false == OpenCLSymbolsOperator::getOpenclSymbolsPtr()->isQcomError())
                    && getDeviceSupportsExtension(*(mFirstGPUDevicePtr.get()), "cl_qcom_recordable_queues")){
                     mSupportRecordQueue = true;
                     uint32_t MaxRecordableQueueSize = mFirstGPUDevicePtr->getInfo<CL_DEVICE_RECORDABLE_QUEUE_MAX_SIZE>();
@@ -289,7 +291,7 @@ OpenCLRuntime::OpenCLRuntime(int platformSize, int platformId, int deviceId, voi
                 }
             }
 #endif
-            
+
         }else{
             mIsCreateError = true;
             MNN_ASSERT(1 <= gpuDevices.size());
@@ -323,13 +325,13 @@ OpenCLRuntime::OpenCLRuntime(int platformSize, int platformId, int deviceId, voi
         cl::vector<cl::size_type> _workItems(dims, 1);
         res = mFirstGPUDevicePtr->getInfo(CL_DEVICE_MAX_WORK_ITEM_SIZES, &_workItems);
         MNN_CHECK_CL_SUCCESS(res, "DeviceGetInfo");
-        
+
         std::vector<uint32_t> workItems(dims, 1);
         for (int i = 0; i < dims; ++i) {
             workItems[i] = _workItems[i];
         }
         mMaxWorkIterms = workItems;
-    } while(false);  
+    } while(false);
 
 }
 
@@ -355,7 +357,7 @@ std::map<std::vector<uint32_t>, std::vector<uint32_t>>& OpenCLRuntime::tunedGemm
 std::map<std::pair<std::string, std::vector<uint32_t>>, TuneInfo>& OpenCLRuntime::tunedLwsMap() {
     return mTunedLws;
 }
-    
+
 std::map<std::string, std::vector<TuneInfo>>& OpenCLRuntime::getTuneLwsMap() {
     return mTuneLws;
 }
@@ -472,6 +474,10 @@ std::shared_ptr<KernelWrap> OpenCLRuntime::buildKernel(const std::string &progra
 
 std::shared_ptr<KernelWrap> OpenCLRuntime::buildKernelWithCache(const std::string &programName, const std::string &kernelName,
                                       const std::set<std::string> &buildOptions, int precisionLevel, const Tensor *input, const Tensor *output, bool useCache) {
+    #ifdef LOG_VERBOSE
+    // 打印 programName 和 kernelName
+    MNN_PRINT("buildKernelWithCache Program Name: %s, Kernel Name: %s\n", programName.c_str(), kernelName.c_str());
+    #endif
     std::string buildOptionsStr;
     if (precisionLevel == 2) {// Fp16 Memory and fp16 compute
         buildOptionsStr = "-DFLOAT=half -DFLOAT2=half2 -DFLOAT3=half3 -DFLOAT4=half4 -DFLOAT8=half8 -DFLOAT16=half16 -DCOMPUTE_FLOAT=half  -DCOMPUTE_FLOAT2=half2 -DCOMPUTE_FLOAT3=half3 -DCOMPUTE_FLOAT4=half4 -DCOMPUTE_FLOAT8=half8 -DCOMPUTE_FLOAT16=half16 -DCONVERT_COMPUTE_FLOAT=convert_half -DCONVERT_COMPUTE_FLOAT2=convert_half2 -DCONVERT_COMPUTE_FLOAT3=convert_half3 -DCONVERT_COMPUTE_FLOAT4=convert_half4 -DCONVERT_COMPUTE_FLOAT8=convert_half8 -DCONVERT_COMPUTE_FLOAT16=convert_half16 -DRI_F=read_imageh -DWI_F=write_imageh -DCONVERT_FLOAT=convert_half  -DCONVERT_FLOAT2=convert_half2 -DCONVERT_FLOAT3=convert_half3 -DCONVERT_FLOAT4=convert_half4 -DCONVERT_FLOAT8=convert_half8 -DCONVERT_FLOAT16=convert_half16 -DMNN_SUPPORT_FP16";
@@ -480,7 +486,7 @@ std::shared_ptr<KernelWrap> OpenCLRuntime::buildKernelWithCache(const std::strin
     } else {// Fp32 Memory and fp32 compute
         buildOptionsStr = "-DFLOAT=float -DFLOAT2=float2 -DFLOAT3=float3 -DFLOAT4=float4 -DFLOAT8=float8 -DFLOAT16=float16 -DCOMPUTE_FLOAT=float  -DCOMPUTE_FLOAT2=float2 -DCOMPUTE_FLOAT3=float3 -DCOMPUTE_FLOAT4=float4 -DCOMPUTE_FLOAT8=float8 -DCOMPUTE_FLOAT16=float16 -DCONVERT_COMPUTE_FLOAT=convert_float  -DCONVERT_COMPUTE_FLOAT2=convert_float2 -DCONVERT_COMPUTE_FLOAT3=convert_float3 -DCONVERT_COMPUTE_FLOAT4=convert_float4 -DCONVERT_COMPUTE_FLOAT8=convert_float8 -DCONVERT_COMPUTE_FLOAT16=convert_float16 -DRI_F=read_imagef -DFLOAT16=float16 -DWI_F=write_imagef -DCONVERT_FLOAT=convert_float  -DCONVERT_FLOAT2=convert_float2 -DCONVERT_FLOAT3=convert_float3 -DCONVERT_FLOAT4=convert_float4 -DCONVERT_FLOAT8=convert_float8 -DCONVERT_FLOAT16=convert_float16";
     }
-    
+
     if(nullptr != input){
         if(input->getType().code == halide_type_int) {
             buildOptionsStr += " -DINPUT_TYPE_I=int";
@@ -530,7 +536,7 @@ std::shared_ptr<KernelWrap> OpenCLRuntime::buildKernelWithCache(const std::strin
             }
         }
     }
-    
+
     if(nullptr != output){
         if(output->getType().code == halide_type_int) {
             buildOptionsStr += " -DOUTPUT_TYPE_I=int";
@@ -600,7 +606,7 @@ std::shared_ptr<KernelWrap> OpenCLRuntime::buildKernelWithCache(const std::strin
             }
         }
     }
-    
+
     if(isSetWorkGroupAttribute) {
         buildOptionsStr += " -DSET_ATTRIBUTE=true";
     } else {
@@ -663,7 +669,7 @@ std::shared_ptr<KernelWrap> OpenCLRuntime::buildKernelFromSource(const std::stri
     } else {
         buildOptionsStr = "-DFLOAT=float -DFLOAT4=float4 -DFLOAT8=float8 -DRI_F=read_imagef -DFLOAT16=float16 -DWI_F=write_imagef -DCONVERT_FLOAT4=convert_float4";
     }
-    
+
     if(isSetWorkGroupAttribute) {
         buildOptionsStr += " -DSET_ATTRIBUTE=true";
     } else {
@@ -673,7 +679,7 @@ std::shared_ptr<KernelWrap> OpenCLRuntime::buildKernelFromSource(const std::stri
         buildOptionsStr += " " + option;
     }
     buildOptionsStr += mDefaultBuildParams;
-    
+
     cl::Program::Sources sources;
     sources.push_back(source);
     cl::Program program = cl::Program(context(), sources);
@@ -746,10 +752,10 @@ std::pair<const void*, size_t> OpenCLRuntime::makeCache(void* tuneInfo) {
         cache->tuned.emplace_back(std::move(p));
     }
     tune->mInfos.clear();
-    
+
     std::unique_ptr<BackendInfoT> backend(new BackendInfoT);
     backend->deviceName = mDeviceInfo;
-    
+
     // Get All program's binary
     for (auto& iter : mBuildProgramMap) {
         std::unique_ptr<ShaderT> pro(new ShaderT);
@@ -762,7 +768,7 @@ std::pair<const void*, size_t> OpenCLRuntime::makeCache(void* tuneInfo) {
         if(it != OpenCLProgramMd5Map.end()){
             pro->md5 = it->second;
         }
-        
+
         //MNN_PRINT("%s - %s - %s\n", pro->program.c_str(), pro->kernel.c_str(), pro->buildInfo.c_str());
         if(bufferSize != 0){
             pro->buffer.resize(bufferSize);
@@ -777,14 +783,14 @@ std::pair<const void*, size_t> OpenCLRuntime::makeCache(void* tuneInfo) {
             MNN_ERROR("Can't load binary, binarySize:%lu, deviceSize:%lu\n", binSizes.size(), devices.size());
             continue;
         }
-        
+
         pro->buffer.resize(binSizes[0]);
         auto proRaw = program.get();
         auto c = pro->buffer.data();
         clGetProgramInfo(proRaw, CL_PROGRAM_BINARIES, sizeof(unsigned char *), &c, nullptr);
         backend->programs.emplace_back(std::move(pro));
     }
-    
+
     // Get All Autotuning cache
     for (auto& iter : mTunedLws) {
         std::unique_ptr<AutotuningT> tuning(new AutotuningT);
@@ -809,9 +815,9 @@ std::pair<const void*, size_t> OpenCLRuntime::makeCache(void* tuneInfo) {
         }
         backend->gemm.emplace_back(std::move(tuning));
     }
-    
+
     cache->backends.emplace_back(std::move(backend));
-    
+
     flatbuffers::FlatBufferBuilder builder;
     auto lastOffset = Cache::Pack(builder, cache.get());
     builder.Finish(lastOffset);
@@ -825,9 +831,9 @@ bool OpenCLRuntime::setCache(std::pair<const void*, size_t> cache) {
         mBuffer.clear();
         return true;
     }
-    
+
     auto cacheBuffer = GetCache(cache.first);
-    
+
     if(nullptr == cacheBuffer->backends()) {
         return false;
     }
@@ -877,7 +883,7 @@ bool OpenCLRuntime::setCache(std::pair<const void*, size_t> cache) {
                     mTuneLws[tun->key()->str()].push_back(tuneInfo);
                 }
             }
-            
+
             // Load Gemm Info
             if (nullptr != backendinfo->gemm()) {
                 auto tuningInfo = backendinfo->gemm();
@@ -919,7 +925,7 @@ bool OpenCLRuntime::setCache(std::pair<const void*, size_t> cache) {
                     mTuneLws["Xgemm_tune"].push_back(tuneInfo);
                 }
             }
-            
+
             // Load Program
             if (nullptr != backendinfo->programs()) {
                 auto programs = backendinfo->programs();
@@ -944,7 +950,7 @@ bool OpenCLRuntime::setCache(std::pair<const void*, size_t> cache) {
                     }
                     // Builder Info
                     std::string buildinfo = shaderInfo->buildInfo()->str();
-                    
+
                     auto buffer = shaderInfo->buffer()->data();
                     size_t bufferSize = shaderInfo->buffer()->size();
                     auto deviceId = mFirstGPUDevicePtr->get();
@@ -1038,10 +1044,11 @@ void OpenCLRuntime::printEventTime(){
             raster_num++;
             raster_time += kernel_time;
         }
-        
+
         kernels[i] = std::make_pair(mEvents[i].first, kernel_time);
     }
-#ifdef SORT_PROFILE_TIME
+
+// #ifdef SORT_PROFILE_TIME
     for(int i = 0; i < mEvents.size(); i++) {
         for(int j = i+1; j < mEvents.size(); j++) {
             if(kernels[i].second > kernels[j].second) {
@@ -1053,12 +1060,22 @@ void OpenCLRuntime::printEventTime(){
             }
         }
     }
-#endif
-    for(int i = 0; i < mEvents.size(); i++) {
-        MNN_PRINT("kernel time = %d    us %s\n", kernels[i].second, kernels[i].first.c_str());
+// #endif
+    for(int i = mEvents.size() - 1; i >= mEvents.size() - 10; i--) {
+        MNN_PRINT("kernel %d time = %d    us %s\n", i, kernels[i].second, kernels[i].first.c_str());
     }
     mEvents.clear();
-    MNN_PRINT("total kernel time = %d  us, conv time = %d us (gemm2:%d us, gemm1:%d us, 1x1:%d us, ori:%d us, wino: %d us, other: %d us), while gemm time = %d us (core gemm time: %d us, softmax:%d us), ori softmax: %d us, raster[%d] time: %d us\n", mKernelTime, conv_time, conv_gemm2_buf_time, conv_gemm1_buf_time, conv_1x1_buf_time, conv_ori_buf_time, wino_gemm_time, conv_time-conv_gemm2_buf_time-conv_gemm1_buf_time-conv_1x1_buf_time-conv_ori_buf_time-wino_gemm_time, loop_bg_time, loop_bg_gemm_time, loop_softmax_time, ori_softmax_time, raster_num, raster_time);
+    MNN_PRINT(
+        "total kernel time = %d  us, conv time = %d us (gemm2:%d us, gemm1:%d "
+        "us, 1x1:%d us, ori:%d us, wino: %d us, other: %d us), while gemm time "
+        "= %d us (core gemm time: %d us, softmax:%d us), ori softmax: %d us, "
+        "raster[%d] time: %d us\n",
+        mKernelTime, conv_time, conv_gemm2_buf_time, conv_gemm1_buf_time,
+        conv_1x1_buf_time, conv_ori_buf_time, wino_gemm_time,
+        conv_time - conv_gemm2_buf_time - conv_gemm1_buf_time -
+            conv_1x1_buf_time - conv_ori_buf_time - wino_gemm_time,
+        loop_bg_time, loop_bg_gemm_time, loop_softmax_time, ori_softmax_time,
+        raster_num, raster_time);
 #endif
 }
 } // namespace MNN
