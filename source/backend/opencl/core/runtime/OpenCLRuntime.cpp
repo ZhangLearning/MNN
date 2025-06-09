@@ -86,7 +86,7 @@ OpenCLRuntime::OpenCLRuntime(const BackendConfig::PrecisionMode precision, const
                 {"Mali-G710", {VALHALL, TOP}},
                 {"Mali-G715", {VALHALL, TOP}},
             };
-        
+
             const std::string deviceVendor  = mFirstGPUDevicePtr->getInfo<CL_DEVICE_VENDOR>();
             cl_command_queue_properties properties = 0;
 
@@ -97,7 +97,7 @@ OpenCLRuntime::OpenCLRuntime(const BackendConfig::PrecisionMode precision, const
             // if device is QUALCOMM's and version is 2.0 , set spacial optimized param
 
             sscanf(deviceVersion.c_str(), "%*s%f%*s", &mCLVersion);
-            
+
         #ifdef MNN_OPENCL_SVM_ENABLE
             if(mCLVersion > 1.99f && (false == OpenCLSymbolsOperator::getOpenclSymbolsPtr()->isSvmError())) {
                 res = mFirstGPUDevicePtr->getInfo(CL_DEVICE_SVM_CAPABILITIES, &mSvmCapabilities);
@@ -118,10 +118,10 @@ OpenCLRuntime::OpenCLRuntime(const BackendConfig::PrecisionMode precision, const
                 #endif
             }
         #endif
-            
+
             if (deviceName.find("QUALCOMM Adreno") != std::string::npos || deviceName.find("Qualcomm") != std::string::npos) {
                 mGpuType = ADRENO;
-                
+
                 // if device is QUALCOMM's and version is 2.0 , set spacial optimized param
                 //if Adreno version is less than Adreno512, donot set WorkGroupAttribute option
                 std::string adrenoVersion = deviceVersion.substr(deviceVersion.size()-3);
@@ -146,7 +146,7 @@ OpenCLRuntime::OpenCLRuntime(const BackendConfig::PrecisionMode precision, const
                 // Radeon series GPU is main product of Advanced Micro Devices (AMD)
                 mGpuType = RADEON;
                 isSetWorkGroupAttribute = true;
-            } 
+            }
             else if (deviceVendor.find("Intel") != std::string::npos) {
                 mGpuType = INTEL;
 #ifdef MNN_SUPPORT_INTEL_SUBGROUP
@@ -158,7 +158,9 @@ OpenCLRuntime::OpenCLRuntime(const BackendConfig::PrecisionMode precision, const
                     uint32_t maxThreadsPerExecutionUnit = num_threads_per_eu > 0 ? num_threads_per_eu : 7;
                     mMaxThreadsPerDevice =  maxThreadsPerExecutionUnit * execution_units_count;
                 }
-#endif 
+#endif
+            } else if (deviceVendor.find("Sietium") != std::string::npos) {
+                mGpuType = SIETIUM;
             }
             else {
                 mGpuType = OTHER;
@@ -202,9 +204,9 @@ OpenCLRuntime::OpenCLRuntime(const BackendConfig::PrecisionMode precision, const
                 mIsCreateError = true;
                 return;
             }
-            
+
             mIsDeviceSupportedLowPower = (mIsDeviceSupportedLowPower || isPriorityHint);
-            
+
             #ifdef MNN_USE_LIB_WRAPPER
             if(isPriorityHint)
             {
@@ -243,29 +245,29 @@ OpenCLRuntime::OpenCLRuntime(const BackendConfig::PrecisionMode precision, const
             mFirstGPUDevicePtr->getInfo(CL_DEVICE_MAX_MEM_ALLOC_SIZE, &mMaxMemAllocSize);
             mFirstGPUDevicePtr->getInfo(CL_DEVICE_LOCAL_MEM_SIZE, &mMaxLocalMemSize);
             mMaxWorkGroupSize = mFirstGPUDevicePtr->getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>();
-            
+
             //set gpu mode, tuning level and memory object
             setGpuMode(cl_mode);
-            
+
             if(mMemType == AUTO) {
-                if(mGpuType == MALI || mGpuType == INTEL) {
+                if(mGpuType == MALI || mGpuType == INTEL || mGpuType == SIETIUM) {
                     mMemType = BUFFER;
                 } else {
                     mMemType = IMAGE;
                 }
             }
             setPrecision(precision);
-            
+
             if(getDeviceSupportsExtension(*(mFirstGPUDevicePtr.get()), "cl_arm_integer_dot_product_int8")){
                 mSupportDotInt8 = true;
             }
             if(getDeviceSupportsExtension(*(mFirstGPUDevicePtr.get()), "cl_arm_integer_dot_product_accumulate_int8")){
                 mSupportDotAccInt8 = true;
             }
-          
+
 #if !defined(ENABLE_OPENCL_TIME_PROFILER) && defined(MNN_USE_LIB_WRAPPER)
             {
-                if((false == OpenCLSymbolsOperator::getOpenclSymbolsPtr()->isQcomError()) 
+                if((false == OpenCLSymbolsOperator::getOpenclSymbolsPtr()->isQcomError())
                    && getDeviceSupportsExtension(*(mFirstGPUDevicePtr.get()), "cl_qcom_recordable_queues")
                    && (cl_mode & MNN_GPU_RECORD_OP || cl_mode & MNN_GPU_RECORD_BATCH)
                    && hint.encorderNumForCommit > 0){
@@ -284,7 +286,7 @@ OpenCLRuntime::OpenCLRuntime(const BackendConfig::PrecisionMode precision, const
                 }
             }
 #endif
-            
+
         }else{
             mIsCreateError = true;
             MNN_ASSERT(1 <= gpuDevices.size());
@@ -318,7 +320,7 @@ OpenCLRuntime::OpenCLRuntime(const BackendConfig::PrecisionMode precision, const
         cl::vector<cl::size_type> _workItems(dims, 1);
         res = mFirstGPUDevicePtr->getInfo(CL_DEVICE_MAX_WORK_ITEM_SIZES, &_workItems);
         MNN_CHECK_CL_SUCCESS(res, "DeviceGetInfo");
-        
+
         std::vector<uint32_t> workItems(dims, 1);
         for (int i = 0; i < dims; ++i) {
             workItems[i] = _workItems[i];
@@ -333,42 +335,44 @@ void OpenCLRuntime::setGpuMode(const int cl_mode_num) {
     bool isSet = (cl_mode_num & MNN_GPU_MEMORY_BUFFER);
     if(isSet) {
         mMemType = BUFFER;
+        MNN_PRINT("OpenCLRuntime::setGpuMode set BUFFER mode is Done. Cur cl_mode:0x%x！\n", cl_mode_num);
         totalSet++;
     }
     isSet = (cl_mode_num & MNN_GPU_MEMORY_IMAGE);
     if(isSet) {
         mMemType = IMAGE;
+        MNN_PRINT("OpenCLRuntime::setGpuMode set IMAGE mode is Done. Cur cl_mode:0x%x！\n", cl_mode_num);
         totalSet++;
     }
     if(totalSet > 1) {
         MNN_PRINT("set both BUFFER and IMAGE mode is not permitted, please check cl_mode:%x！\n", cl_mode_num);
     }
-    
+
     totalSet = 0;
     isSet = (cl_mode_num & MNN_GPU_TUNING_NONE);
     if(isSet) {
         mTuneLevel = None;
         totalSet++;
     }
-    
+
     isSet = (cl_mode_num & MNN_GPU_TUNING_FAST);
     if(isSet) {
         mTuneLevel = Fast;
         totalSet++;
     }
-    
+
     isSet = (cl_mode_num & MNN_GPU_TUNING_NORMAL);
     if(isSet) {
         mTuneLevel = Normal;
         totalSet++;
     }
-    
+
     isSet = (cl_mode_num & MNN_GPU_TUNING_HEAVY);
     if(isSet) {
         mTuneLevel = Heavy;
         totalSet++;
     }
-    
+
     isSet = (cl_mode_num & MNN_GPU_TUNING_WIDE);
     if(isSet) {
         mTuneLevel = Wide;
@@ -378,20 +382,20 @@ void OpenCLRuntime::setGpuMode(const int cl_mode_num) {
     if(totalSet != 1) {
         MNN_PRINT("set multi tuning mode is not permitted, please check cl_mode:%x！\n", cl_mode_num);
     }
-    
+
     totalSet = 0;
     isSet = (cl_mode_num & MNN_GPU_RECORD_OP);
     if(isSet) {
         mDevideOpRecord = true;
         totalSet++;
     }
-    
+
     isSet = (cl_mode_num & MNN_GPU_RECORD_BATCH);
     if(isSet) {
         mDevideOpRecord = false;
         totalSet++;
     }
-    
+
     if(totalSet > 1) {
         MNN_PRINT("set multi record kernel mode is not permitted, please check cl_mode:%x！\n", cl_mode_num);
     }
@@ -423,7 +427,7 @@ std::map<std::vector<uint32_t>, std::vector<uint32_t>>& OpenCLRuntime::tunedGemm
 std::map<std::pair<std::string, std::vector<uint32_t>>, std::pair<std::vector<uint32_t>, uint32_t>>& OpenCLRuntime::tunedLwsMap() {
     return mTunedLws;
 }
-    
+
 std::map<std::string, std::vector<std::pair<std::vector<uint32_t>, std::pair<std::vector<uint32_t>, uint32_t>>>>& OpenCLRuntime::getTuneLwsMap() {
     return mTuneLws;
 }
@@ -522,7 +526,7 @@ void OpenCLRuntime::setPrecision(const BackendConfig::PrecisionMode precision){
             mPrecisionLevel = 0;
         }
     }
-    
+
     // Is supported fp16 IO storage
     mIsSupportedFP16 = (mPrecisionLevel == 2 || mPrecisionLevel == 0);
 }
@@ -565,6 +569,10 @@ std::shared_ptr<KernelWrap> OpenCLRuntime::buildKernel(const std::string &progra
 
 std::shared_ptr<KernelWrap> OpenCLRuntime::buildKernelWithCache(const std::string &programName, const std::string &kernelName,
                                       const std::set<std::string> &buildOptions, const Tensor *input, const Tensor *output, bool useCache) {
+    #ifdef LOG_VERBOSE
+    // 打印 programName 和 kernelName
+    MNN_PRINT("buildKernelWithCache Program Name: %s, Kernel Name: %s\n", programName.c_str(), kernelName.c_str());
+    #endif
     std::string buildOptionsStr;
     if (mPrecisionLevel == 2) {// Fp16 Memory and fp16 compute
         buildOptionsStr = "-DFLOAT=half -DFLOAT2=half2 -DFLOAT3=half3 -DFLOAT4=half4 -DFLOAT8=half8 -DFLOAT16=half16 -DCOMPUTE_FLOAT=half  -DCOMPUTE_FLOAT2=half2 -DCOMPUTE_FLOAT3=half3 -DCOMPUTE_FLOAT4=half4 -DCOMPUTE_FLOAT8=half8 -DCOMPUTE_FLOAT16=half16 -DCONVERT_COMPUTE_FLOAT=convert_half -DCONVERT_COMPUTE_FLOAT2=convert_half2 -DCONVERT_COMPUTE_FLOAT3=convert_half3 -DCONVERT_COMPUTE_FLOAT4=convert_half4 -DCONVERT_COMPUTE_FLOAT8=convert_half8 -DCONVERT_COMPUTE_FLOAT16=convert_half16 -DRI_F=read_imageh -DWI_F=write_imageh -DCONVERT_FLOAT=convert_half  -DCONVERT_FLOAT2=convert_half2 -DCONVERT_FLOAT3=convert_half3 -DCONVERT_FLOAT4=convert_half4 -DCONVERT_FLOAT8=convert_half8 -DCONVERT_FLOAT16=convert_half16 -DMNN_SUPPORT_FP16";
@@ -573,7 +581,7 @@ std::shared_ptr<KernelWrap> OpenCLRuntime::buildKernelWithCache(const std::strin
     } else {// Fp32 Memory and fp32 compute
         buildOptionsStr = "-DFLOAT=float -DFLOAT2=float2 -DFLOAT3=float3 -DFLOAT4=float4 -DFLOAT8=float8 -DFLOAT16=float16 -DCOMPUTE_FLOAT=float  -DCOMPUTE_FLOAT2=float2 -DCOMPUTE_FLOAT3=float3 -DCOMPUTE_FLOAT4=float4 -DCOMPUTE_FLOAT8=float8 -DCOMPUTE_FLOAT16=float16 -DCONVERT_COMPUTE_FLOAT=convert_float  -DCONVERT_COMPUTE_FLOAT2=convert_float2 -DCONVERT_COMPUTE_FLOAT3=convert_float3 -DCONVERT_COMPUTE_FLOAT4=convert_float4 -DCONVERT_COMPUTE_FLOAT8=convert_float8 -DCONVERT_COMPUTE_FLOAT16=convert_float16 -DRI_F=read_imagef -DFLOAT16=float16 -DWI_F=write_imagef -DCONVERT_FLOAT=convert_float  -DCONVERT_FLOAT2=convert_float2 -DCONVERT_FLOAT3=convert_float3 -DCONVERT_FLOAT4=convert_float4 -DCONVERT_FLOAT8=convert_float8 -DCONVERT_FLOAT16=convert_float16";
     }
-    
+
     if(nullptr != input){
         if(input->getType().code == halide_type_int) {
             buildOptionsStr += " -DINPUT_TYPE_I=int";
@@ -623,7 +631,7 @@ std::shared_ptr<KernelWrap> OpenCLRuntime::buildKernelWithCache(const std::strin
             }
         }
     }
-    
+
     if(nullptr != output){
         if(output->getType().code == halide_type_int) {
             buildOptionsStr += " -DOUTPUT_TYPE_I=int";
@@ -693,7 +701,7 @@ std::shared_ptr<KernelWrap> OpenCLRuntime::buildKernelWithCache(const std::strin
             }
         }
     }
-    
+
     if(isSetWorkGroupAttribute) {
         buildOptionsStr += " -DSET_ATTRIBUTE=true";
     } else {
@@ -750,13 +758,17 @@ std::shared_ptr<KernelWrap> OpenCLRuntime::buildKernelWithCache(const std::strin
 
 std::shared_ptr<KernelWrap> OpenCLRuntime::buildKernelFromSource(const std::string& source, const std::string &kernelName,
                                                 const std::set<std::string> &buildOptions) {
+    #ifdef LOG_VERBOSE
+    // 打印 programName 和 kernelName
+    MNN_PRINT("buildKernelFromSource source Name: %s, Kernel Name: %s\n", source.c_str(), kernelName.c_str());
+    #endif
     std::string buildOptionsStr;
     if (mIsSupportedFP16) {
         buildOptionsStr = "-DFLOAT=half -DFLOAT4=half4 -DFLOAT8=half8 -DFLOAT16=half16 -DRI_F=read_imageh -DWI_F=write_imageh -DCONVERT_FLOAT4=convert_half4 -DMNN_SUPPORT_FP16";
     } else {
         buildOptionsStr = "-DFLOAT=float -DFLOAT4=float4 -DFLOAT8=float8 -DRI_F=read_imagef -DFLOAT16=float16 -DWI_F=write_imagef -DCONVERT_FLOAT4=convert_float4";
     }
-    
+
     if(isSetWorkGroupAttribute) {
         buildOptionsStr += " -DSET_ATTRIBUTE=true";
     } else {
@@ -766,7 +778,7 @@ std::shared_ptr<KernelWrap> OpenCLRuntime::buildKernelFromSource(const std::stri
         buildOptionsStr += " " + option;
     }
     buildOptionsStr += mDefaultBuildParams;
-    
+
     cl::Program::Sources sources;
     sources.push_back(source);
     cl::Program program = cl::Program(context(), sources);
@@ -847,7 +859,7 @@ std::pair<const void*, size_t> OpenCLRuntime::makeCache(void* tuneInfo) {
         // Only use first one
         pro->program = std::get<0>(iter.first);
         pro->buildInfo = std::get<1>(iter.first);
-        
+
         //MNN_PRINT("%s - %s - %s\n", pro->program.c_str(), pro->kernel.c_str(), pro->buildInfo.c_str());
         if(bufferSize != 0){
             pro->buffer.resize(bufferSize);
@@ -862,7 +874,7 @@ std::pair<const void*, size_t> OpenCLRuntime::makeCache(void* tuneInfo) {
             MNN_ERROR("Can't load binary, binarySize:%lu, deviceSize:%lu\n", binSizes.size(), devices.size());
             continue;
         }
-        
+
         pro->buffer.resize(binSizes[0]);
         auto proRaw = program.get();
         auto c = pro->buffer.data();
@@ -886,7 +898,7 @@ std::pair<const void*, size_t> OpenCLRuntime::makeCache(void* tuneInfo) {
         tuning->paramInfo = iter.second;
         cache->gemm.emplace_back(std::move(tuning));
     }
-    
+
     // Get All PreParam cache
     for(auto& iter : mPreParams){
         std::unique_ptr<PreParamInfoT> info(new PreParamInfoT);
@@ -894,7 +906,7 @@ std::pair<const void*, size_t> OpenCLRuntime::makeCache(void* tuneInfo) {
         info->preParamData = iter.second;
         cache->preParam.emplace_back(std::move(info));
     }
-    
+
     flatbuffers::FlatBufferBuilder builder;
     auto lastOffset = Cache::Pack(builder, cache.get());
     builder.Finish(lastOffset);
@@ -908,13 +920,13 @@ bool OpenCLRuntime::setCache(std::pair<const void*, size_t> cache) {
         mBuffer.clear();
         return true;
     }
-    
+
     auto cacheBuffer = GetCache(cache.first);
-    
+
     if(nullptr == cacheBuffer->programs() && nullptr == cacheBuffer->tunings() && nullptr == cacheBuffer->gemm()) {
         return false;
     }
-    
+
     // Load Program
     if (nullptr != cacheBuffer->programs()) {
         auto programs = cacheBuffer->programs();
@@ -927,7 +939,7 @@ bool OpenCLRuntime::setCache(std::pair<const void*, size_t> cache) {
             auto program = shaderInfo->program()->str();
             // Builder Info
             std::string buildinfo = shaderInfo->buildInfo()->str();
-            
+
             auto buffer = shaderInfo->buffer()->data();
             size_t bufferSize = shaderInfo->buffer()->size();
             auto deviceId = mFirstGPUDevicePtr->get();
@@ -973,7 +985,7 @@ bool OpenCLRuntime::setCache(std::pair<const void*, size_t> cache) {
             mTuneLws[tun->key()->str()].push_back(std::make_pair(glo, std::make_pair(loc, cost)));
         }
     }
-    
+
     // Load Gemm Info
     if (nullptr != cacheBuffer->gemm()) {
         auto tuningInfo = cacheBuffer->gemm();
@@ -997,7 +1009,7 @@ bool OpenCLRuntime::setCache(std::pair<const void*, size_t> cache) {
             mTuneLws["Xgemm_tune"].push_back(std::make_pair(info, std::make_pair(params, 0)));
         }
     }
-    
+
     //Load PreParam Info
     if(nullptr != cacheBuffer->preParam()){
         auto preParamInfo = cacheBuffer->preParam();
@@ -1069,10 +1081,11 @@ void OpenCLRuntime::printEventTime(){
             raster_num++;
             raster_time += kernel_time;
         }
-        
+
         kernels[i] = std::make_pair(mEvents[i].first, kernel_time);
     }
-#ifdef SORT_PROFILE_TIME
+
+// #ifdef SORT_PROFILE_TIME
     for(int i = 0; i < mEvents.size(); i++) {
         for(int j = i+1; j < mEvents.size(); j++) {
             if(kernels[i].second > kernels[j].second) {
@@ -1084,12 +1097,22 @@ void OpenCLRuntime::printEventTime(){
             }
         }
     }
-#endif
-    for(int i = 0; i < mEvents.size(); i++) {
-        MNN_PRINT("kernel time = %d    us %s\n", kernels[i].second, kernels[i].first.c_str());
+// #endif
+    for(int i = mEvents.size() - 1; i >= mEvents.size() - 10; i--) {
+        MNN_PRINT("kernel %d time = %d    us %s\n", i, kernels[i].second, kernels[i].first.c_str());
     }
     mEvents.clear();
-    MNN_PRINT("total kernel time = %d  us, conv time = %d us (gemm2:%d us, gemm1:%d us, 1x1:%d us, ori:%d us, wino: %d us, other: %d us), while gemm time = %d us (core gemm time: %d us, softmax:%d us), ori softmax: %d us, raster[%d] time: %d us\n", mKernelTime, conv_time, conv_gemm2_buf_time, conv_gemm1_buf_time, conv_1x1_buf_time, conv_ori_buf_time, wino_gemm_time, conv_time-conv_gemm2_buf_time-conv_gemm1_buf_time-conv_1x1_buf_time-conv_ori_buf_time-wino_gemm_time, loop_bg_time, loop_bg_gemm_time, loop_softmax_time, ori_softmax_time, raster_num, raster_time);
+    MNN_PRINT(
+        "total kernel time = %d  us, conv time = %d us (gemm2:%d us, gemm1:%d "
+        "us, 1x1:%d us, ori:%d us, wino: %d us, other: %d us), while gemm time "
+        "= %d us (core gemm time: %d us, softmax:%d us), ori softmax: %d us, "
+        "raster[%d] time: %d us\n",
+        mKernelTime, conv_time, conv_gemm2_buf_time, conv_gemm1_buf_time,
+        conv_1x1_buf_time, conv_ori_buf_time, wino_gemm_time,
+        conv_time - conv_gemm2_buf_time - conv_gemm1_buf_time -
+            conv_1x1_buf_time - conv_ori_buf_time - wino_gemm_time,
+        loop_bg_time, loop_bg_gemm_time, loop_softmax_time, ori_softmax_time,
+        raster_num, raster_time);
 #endif
 }
 } // namespace MNN

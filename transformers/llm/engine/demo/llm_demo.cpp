@@ -13,6 +13,11 @@
 #include <sstream>
 #include <stdlib.h>
 #include <initializer_list>
+#include <iostream>
+#include <iomanip>
+#include <chrono>
+#include <ctime>
+#include <thread>
 using namespace MNN::Transformer;
 
 static void tuning_prepare(Llm* llm) {
@@ -64,6 +69,20 @@ std::vector<std::vector<std::string>> parse_csv(const std::vector<std::string>& 
     return csv_data;
 }
 
+// 函数：获取并打印当前时间
+void printCurrentTime() {
+    // 获取当前时间点（自纪元以来的时间）
+    auto now = std::chrono::system_clock::now();
+    // 将时间点转换为 time_t 类型，以便使用标准 C 时间函数
+    std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
+    // 将 time_t 转换为 tm 结构，以便格式化输出
+    std::tm* local_tm = std::localtime(&now_time_t);
+    // 打印当前时间，格式为 YYYY-MM-DD HH:MM:SS
+    std::cout << "当前时间: "
+              << std::put_time(local_tm, "%Y-%m-%d %H:%M:%S")
+              << std::endl;
+}
+
 static int benchmark(Llm* llm, const std::vector<std::string>& prompts, int max_token_number) {
     int prompt_len = 0;
     int decode_len = 0;
@@ -77,6 +96,8 @@ static int benchmark(Llm* llm, const std::vector<std::string>& prompts, int max_
     if (max_token_number > 0) {
         llm->set_config("{\"max_new_tokens\":1}");
     }
+    // 调用函数以打印当前时间
+    printCurrentTime();
     for (int i = 0; i < prompts.size(); i++) {
         const auto& prompt = prompts[i];
         // prompt start with '#' will be ignored
@@ -92,32 +113,41 @@ static int benchmark(Llm* llm, const std::vector<std::string>& prompts, int max_
             llm->response(prompt);
         }
         llm->reset();
-        prompt_len += context->prompt_len;
-        decode_len += context->gen_seq_len;
-        vision_time += context->vision_us;
-        audio_time += context->audio_us;
-        prefill_time += context->prefill_us;
-        decode_time += context->decode_us;
-        sample_time += context->sample_us;
+        prompt_len   = context->prompt_len;
+        decode_len   = context->gen_seq_len;
+        // vision_time  = context->vision_us;
+        // audio_time   = context->audio_us;
+        prefill_time = context->prefill_us;
+        decode_time  = context->decode_us;
+        sample_time  = context->sample_us;
+        float vision_s = vision_time / 1e6;
+        float audio_s = audio_time / 1e6;
+        float prefill_s = prefill_time / 1e6;
+        float decode_s = decode_time / 1e6;
+        float sample_s = sample_time / 1e6;
+        printf("\n#################################\n");
+        printf("prompts No %d: %s\n", i, prompt.c_str());
+        printf("prompt tokens num = %d\n", prompt_len);
+        printf("decode tokens num = %d\n", decode_len);
+        // printf(" vision time = %.2f s\n", vision_s);
+        // printf("  audio time = %.2f s\n", audio_s);
+        printf("prefill time = %.2f s\n", prefill_s);
+        printf("decode time = %.2f s\n", decode_s);
+        printf("sample time = %.2f s\n", sample_s);
+        printf("prefill speed = %.2f tok/s\n", prompt_len / prefill_s);
+        printf("decode speed = %.2f tok/s\n", decode_len / decode_s);
+
+        // 调用函数以打印当前时间
+        printCurrentTime();
+        printf("##################################\n");
+        printf("##############   std::this_thread::sleep_for(std::chrono::seconds(2));   ##############\n");
+        std::this_thread::sleep_for(std::chrono::seconds(2));
     }
-    float vision_s = vision_time / 1e6;
-    float audio_s = audio_time / 1e6;
-    float prefill_s = prefill_time / 1e6;
-    float decode_s = decode_time / 1e6;
-    float sample_s = sample_time / 1e6;
-    printf("\n#################################\n");
-    printf("prompt tokens num = %d\n", prompt_len);
-    printf("decode tokens num = %d\n", decode_len);
-    printf(" vision time = %.2f s\n", vision_s);
-    printf("  audio time = %.2f s\n", audio_s);
-    printf("prefill time = %.2f s\n", prefill_s);
-    printf(" decode time = %.2f s\n", decode_s);
-    printf(" sample time = %.2f s\n", sample_s);
-    printf("prefill speed = %.2f tok/s\n", prompt_len / prefill_s);
-    printf(" decode speed = %.2f tok/s\n", decode_len / decode_s);
-    printf("##################################\n");
+
     return 0;
 }
+
+
 
 static int ceval(Llm* llm, const std::vector<std::string>& lines, std::string filename) {
     auto csv_data = parse_csv(lines);

@@ -413,7 +413,7 @@ void Llm::tuning(TuneType type, std::vector<int> candidates) {
         if (time < min_time) {
             prefer_candidate = candidate;
             min_time         = time;
-            // MNN_PRINT("op encode number:%d, decode time: %lld us\n", candidate, time);
+            MNN_PRINT("op encode number:%d, decode time: %lld us\n", candidate, time);
         }
     }
     mRuntimeManager->setHint(MNN::Interpreter::OP_ENCODER_NUMBER_FOR_COMMIT, prefer_candidate);
@@ -609,7 +609,7 @@ void Llm::response(const std::string& user_content, std::ostream* os, const char
     if (mConfig->use_template()) {
         prompt = mPrompt->applyTemplate(user_content);
     }
-    // std::cout << prompt << std::endl;
+    std::cout << "Cur prompt: " << prompt << std::endl;
     std::vector<int> input_ids = tokenizer_encode(prompt);
     generate(input_ids, max_new_tokens);
 }
@@ -619,7 +619,7 @@ void Llm::response(const ChatMessages& chat_prompts, std::ostream* os, const cha
         return;
     }
     auto prompt = mPrompt->applyTemplate(chat_prompts);
-    // std::cout << prompt << std::endl;
+    std::cout << "Cur prompt: " << prompt << std::endl;
     response(prompt, os, end_with, max_new_tokens);
 }
 

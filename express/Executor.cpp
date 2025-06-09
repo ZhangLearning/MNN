@@ -27,13 +27,14 @@ namespace Express {
 
 void Executor::setGlobalExecutorConfig(MNNForwardType type, const BackendConfig& config, int numberThread) {
     std::lock_guard<std::mutex> _l(mMutex);
-    
+
     if(type == MNN_FORWARD_AUTO) {
         ScheduleConfig sConfig;
         sConfig.type = type;
         type = Schedule::getApprociateType(sConfig);
     }
     auto rt = _getOrCreateRuntime(type, &config, numberThread);
+    MNN_ASSERT(nullptr != rt);
     if (rt == nullptr) {
         type = MNN_FORWARD_CPU;
         numberThread = 1;
@@ -360,6 +361,7 @@ void Executor::RuntimeManager::setCache(std::string cacheName) {
         MNN_PRINT("Cache invalid, will be reset\n");
     } else {
         mInside->mCache->lastCacheSize = mInside->mCache->cacheBuffer.size() - mInside->mCache->cacheOffset;
+        MNN_PRINT("<<<<<< Load Cache Success. >>>>>>\n");
     }
 }
 

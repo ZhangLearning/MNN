@@ -75,6 +75,12 @@ option(MNN_LOW_MEMORY "Build MNN support low memory for weight quant model." OFF
 option(MNN_CPU_WEIGHT_DEQUANT_GEMM "Build MNN CPU weight dequant related gemm kernels." OFF)
 option(MNN_BUILD_AUDIO "Build audio api in MNN." OFF)
 
+option(MNN_LOG_VERBOSE_ENABLE "Debug log in MNN." OFF)
+IF (MNN_LOG_VERBOSE_ENABLE)
+    add_definitions(-DLOG_VERBOSE)
+ENDIF()
+
+
 IF (OHOS AND MNN_INTERNAL)
   include($ENV{NODE_PATH}/@ali/tcpkg/tcpkg.cmake)
   export_headers(DIR ${CMAKE_SOURCE_DIR}/include/MNN)

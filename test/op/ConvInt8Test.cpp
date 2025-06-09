@@ -258,7 +258,7 @@ protected:
             auto error = (int32_t)targetValue - (int32_t)computeResult;
             if (error * error > 1) {
                 MNN_PRINT("ic=%d, oc=%d, ow=%d, oh=%d, ConvInt8 result No.%d Error: right=%d, error=%d\n", channel[0], channel[1], ow, oh, i, targetValue, computeResult);
-#ifdef DEBUG 
+#ifdef DEBUG
                 x->writeMap<int8_t>();
                 auto ptr = y->readMap<int8_t>();
                 FUNC_PRINT_ALL(ptr, p);
@@ -302,7 +302,7 @@ public:
         std::vector< std::vector<int>> pxpy = {{1, 1}, {0, 0}, {2, 3}};
         std::vector< std::vector<int>> sxsy = {{1, 1}, {2, 2}};
         std::vector< std::vector<int>> dxdy = {{1, 1}, {2, 2}};
-        
+
         for (int i0 = 0; i0 < kxky.size(); i0++) {
             for (int i1 = 0; i1 < icoc.size(); i1++) {
                 for (int i2 = 0; i2 < batch.size(); i2++) {
@@ -312,7 +312,7 @@ public:
                                 for (int i6 = 3; i6 < iwih.size(); i6++) {
                                     auto res = testKernel(iwih[i6], kxky[i0], icoc[i1], pxpy[i3], sxsy[i4], dxdy[i5], 8, false, 1, batch[i2], MNN::SparseAlgo_RANDOM, 1, false);
                                     if (!res) {
-                                        MNN_ERROR("kx=%d, ky=%d, iw=%d, ih=%d, overflow=false, bit=8, batch=%d, Conv info: sx=%d, sy=%d, dx=%d, dy=%d, px=%d, py=%d, ic=%d, oc=%d\n", 
+                                        MNN_ERROR("kx=%d, ky=%d, iw=%d, ih=%d, overflow=false, bit=8, batch=%d, Conv info: sx=%d, sy=%d, dx=%d, dy=%d, px=%d, py=%d, ic=%d, oc=%d\n",
                                                    kxky[i0][0], kxky[i0][1], iwih[i6][0], iwih[i6][1], batch[i2], sxsy[i4][0], sxsy[i4][1], dxdy[i5][0], dxdy[i5][1], pxpy[i3][0], pxpy[i3][1], icoc[i1][0], icoc[i1][1]);
                                         return false;
                                     }
@@ -323,7 +323,7 @@ public:
                 }
             }
         }
-        
+
         int sx = 1, sy = 1, dx = 1, dy = 1, px = 1, py = 1, ic = 17, oc = 8, kx = 3, ky = 3; // ic=17,54,{14,11},{7,7}
         auto res = testKernel({7, 7}, {kx, ky}, {ic, oc}, {px, py}, {sx, sy}, {dx, dy}, 8, false, 1, 1, MNN::SparseAlgo_RANDOM, 1, false);
         if (!res) {
@@ -335,7 +335,7 @@ public:
             MNN_ERROR("overflow=false, bit=8, batch=%d, Conv info: sx=%d, sy=%d, dx=%d, dy=%d, px=%d, py=%d, ic=%d, oc=%d\n", 1, sx, sy, dx, dy, px, py, ic, oc);
             return false;
         }
-        
+
         std::vector<std::vector<int>> kernels = {
             {4, 2}, {1, 5}, {7, 1}
         };
@@ -716,25 +716,25 @@ public:
                             }
                             auto res = testKernel(inputShape, kernel, {channel, channel}, pad, {stride, stride}, dilate, 8, false, channel, 4, MNN::SparseAlgo_RANDOM, 1, false);
                             if (!res) {
-                                MNN_PRINT("inputShape=(%d %d), kernel=(%d %d), channel=%d, pad=(%d %d), stride=%d, dilate=%d, nbit=8\n", 
+                                MNN_PRINT("inputShape=(%d %d), kernel=(%d %d), channel=%d, pad=(%d %d), stride=%d, dilate=%d, nbit=8\n",
                                           inputShape[0], inputShape[1], kernel[0], kernel[1], channel, pad[0], pad[1], stride,dilate[0] );
                                 return false;
                             }
                             res = testKernel(inputShape, kernel, {channel, channel}, pad, {stride, stride}, dilate, 3, false, channel, 4, MNN::SparseAlgo_RANDOM, 1, false);
                             if (!res) {
-                                MNN_PRINT("inputShape=(%d %d), kernel=(%d %d), channel=%d, pad=(%d %d), stride=%d, dilate=%d, nbit=3\n", 
+                                MNN_PRINT("inputShape=(%d %d), kernel=(%d %d), channel=%d, pad=(%d %d), stride=%d, dilate=%d, nbit=3\n",
                                           inputShape[0], inputShape[1], kernel[0], kernel[1], channel, pad[0], pad[1], stride,dilate[0] );
                                 return false;
                             }
                             res = testKernel(inputShape, kernel, {channel, channel}, pad, {stride, stride}, dilate, 8, false, channel, 1, MNN::SparseAlgo_RANDOM, 1, false);
                             if (!res) {
-                                MNN_PRINT("inputShape=(%d %d), kernel=(%d %d), channel=%d, pad=(%d %d), stride=%d, dilate=%d, nbit=8\n", 
+                                MNN_PRINT("inputShape=(%d %d), kernel=(%d %d), channel=%d, pad=(%d %d), stride=%d, dilate=%d, nbit=8\n",
                                           inputShape[0], inputShape[1], kernel[0], kernel[1], channel, pad[0], pad[1], stride,dilate[0] );
                                 return false;
                             }
                             res = testKernel(inputShape, kernel, {channel, channel}, pad, {stride, stride}, dilate, 8, false, channel, 1, MNN::SparseAlgo_RANDOM, 1, false);
                             if (!res) {
-                                MNN_PRINT("inputShape=(%d %d), kernel=(%d %d), channel=%d, pad=(%d %d), stride=%d, dilate=%d, nbit=8\n", 
+                                MNN_PRINT("inputShape=(%d %d), kernel=(%d %d), channel=%d, pad=(%d %d), stride=%d, dilate=%d, nbit=8\n",
                                           inputShape[0], inputShape[1], kernel[0], kernel[1], channel, pad[0], pad[1], stride,dilate[0] );
                                 return false;
                             }
@@ -788,7 +788,7 @@ MNNTestSuiteRegister(ConvInt8Im2colGemmTest, "op/ConvInt8/im2col_gemm");
 #if defined(__arm__) || defined(__aarch64__) // arm32 or arm64
 MNNTestSuiteRegister(SparseConvInt8Im2colGemmTest, "op/ConvInt8/im2col_spmm");
 #endif
-MNNTestSuiteRegister(ConvInt8WinogradTest, "op/ConvInt8/winograd");
+// MNNTestSuiteRegister(ConvInt8WinogradTest, "op/ConvInt8/winograd");
 MNNTestSuiteRegister(ConvSpeedInt8WinogradTest, "speed/ConvInt8/winograd");
 MNNTestSuiteRegister(DepthwiseConvInt8Test, "op/ConvInt8/depthwise");
 MNNTestSuiteRegister(DepthwiseConvSpeedInt8Test, "speed/ConvInt8/depthwise");

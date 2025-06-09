@@ -61,6 +61,8 @@ bool OpenCLSymbols::LoadOpenCLLibrary() {
         "/usr/local/lib/libpocl.so",
         "/usr/lib64/libOpenCL.so",
         "/usr/lib32/libOpenCL.so",
+        // "/usr/lib/x86_64-linux-gnu/genbu/libGenBuOpenCL.so.1.0.0",
+        "/usr/lib/x86_64-linux-gnu/libOpenCL.so.1.0.0",
         "libOpenCL.so"
     /*
      *  0: System32, 1: SysWOW64
@@ -121,7 +123,7 @@ bool OpenCLSymbols::isPropError() {
 bool OpenCLSymbols::isQcomError() {
     return mQcomError;
 }
-    
+
 bool OpenCLSymbols::getFuncAddress(cl_platform_id platform, const char *func_name){
     if(clGetExtensionFunctionAddressForPlatform != nullptr){
         clImportMemoryARM = reinterpret_cast<clImportMemoryARMFunc>(clGetExtensionFunctionAddressForPlatform(platform, "clImportMemoryARM"));
@@ -215,7 +217,7 @@ bool OpenCLSymbols::LoadLibraryFromPath(const std::string &library_path) {
     if(func_name == nullptr){ \
         mQcomError = true; \
     }
-    
+
 #endif
 
     MNN_LOAD_FUNCTION_PTR(clGetPlatformIDs);
@@ -313,6 +315,9 @@ OpenCLSymbolsOperator::OpenCLSymbolsOperator() {
     }
 
     if (false == gOpenclSymbols->LoadOpenCLLibrary()) {
+#ifdef LOG_VERBOSE
+        MNN_PRINT(" OpenCLSymbols LoadOpenCLLibrary false, please check!\n");
+#endif
         gOpenclSymbols.reset();
     }
 #ifdef LOG_VERBOSE

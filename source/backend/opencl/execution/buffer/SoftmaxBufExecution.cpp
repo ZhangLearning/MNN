@@ -33,7 +33,7 @@ ErrorCode SoftmaxBufExecution::onEncode(const std::vector<Tensor *> &inputs, con
     mUnits.clear();
     Tensor *input  = inputs[0];
     Tensor *output = outputs[0];
-    
+
     const auto dims = input->buffer().dimensions;
     auto runtime       = mOpenCLBackend->getOpenCLRuntime();
 
@@ -50,7 +50,7 @@ ErrorCode SoftmaxBufExecution::onEncode(const std::vector<Tensor *> &inputs, con
         mOpenCLBackend->onAcquireBuffer(mTempTensor.get(), Backend::DYNAMIC);
         mOpenCLBackend->onReleaseBuffer(mTempTensor.get(), Backend::DYNAMIC);
     }
-    
+
     int inside  = 1;
     int outside = 1;
     int channel = 1;
@@ -61,7 +61,7 @@ ErrorCode SoftmaxBufExecution::onEncode(const std::vector<Tensor *> &inputs, con
     for (int i = mAxis + 1; i < dims; ++i) {
         inside *= input->length(i);
     }
-    
+
     // NC4HW4 -> NCHW
     if(mNeedUnpackC4){
         Unit unit;
@@ -84,13 +84,13 @@ ErrorCode SoftmaxBufExecution::onEncode(const std::vector<Tensor *> &inputs, con
 
         const uint32_t maxWorkGroupSize = static_cast<uint32_t>(runtime->getMaxWorkGroupSize(unit.kernel));
         mLocalWorkSize = {16, std::max((uint32_t)1, maxWorkGroupSize / 16), 1};
-        
+
         mOpenCLBackend->recordKernel3d(unit.kernel, mGlobalWorkSize, mLocalWorkSize);
         unit.globalWorkSize = {mGlobalWorkSize[0], mGlobalWorkSize[1], mGlobalWorkSize[2]};
         unit.localWorkSize = {mLocalWorkSize[0], mLocalWorkSize[1], mLocalWorkSize[2]};
         mUnits.emplace_back(unit);
     }
-    
+
     // softmax
     {
         Unit unit;
@@ -115,9 +115,9 @@ ErrorCode SoftmaxBufExecution::onEncode(const std::vector<Tensor *> &inputs, con
         }
         mMaxWorkGroupSize = static_cast<uint32_t>(runtime->getMaxWorkGroupSize(unit.kernel));
         mLocalWorkSize = {(uint32_t)(localSize), 1, 1};
-        
+
         cl_int ret = CL_SUCCESS;
-        
+
         uint32_t idx    = 0;
         ret |= unit.kernel->get().setArg(idx++, mGlobalWorkSize[0]);
         ret |= unit.kernel->get().setArg(idx++, mGlobalWorkSize[1]);
@@ -142,13 +142,13 @@ ErrorCode SoftmaxBufExecution::onEncode(const std::vector<Tensor *> &inputs, con
         if(localSize == 1){
             mLocalWorkSize = localWS3DDefault(mGlobalWorkSize, mMaxWorkGroupSize, mOpenCLBackend->getOpenCLRuntime(), "softmax_buf", unit.kernel).first;
         }
-        
+
         mOpenCLBackend->recordKernel3d(unit.kernel, mGlobalWorkSize, mLocalWorkSize);
         unit.globalWorkSize = {mGlobalWorkSize[0], mGlobalWorkSize[1], mGlobalWorkSize[2]};
         unit.localWorkSize = {mLocalWorkSize[0], mLocalWorkSize[1], mLocalWorkSize[2]};
         mUnits.emplace_back(unit);
     }
-    
+
     // NCHW -> NC4HW4
     if(mNeedUnpackC4){
         Unit unit;
@@ -171,13 +171,13 @@ ErrorCode SoftmaxBufExecution::onEncode(const std::vector<Tensor *> &inputs, con
 
         const uint32_t maxWorkGroupSize = static_cast<uint32_t>(runtime->getMaxWorkGroupSize(unit.kernel));
         mLocalWorkSize = {16, std::max((uint32_t)1, maxWorkGroupSize / 16), 1};
-        
+
         mOpenCLBackend->recordKernel3d(unit.kernel, mGlobalWorkSize, mLocalWorkSize);
         unit.globalWorkSize = {mGlobalWorkSize[0], mGlobalWorkSize[1], mGlobalWorkSize[2]};
         unit.localWorkSize = {mLocalWorkSize[0], mLocalWorkSize[1], mLocalWorkSize[2]};
         mUnits.emplace_back(unit);
     }
-    
+
     return NO_ERROR;
 }
 
@@ -223,4 +223,3 @@ REGISTER_OPENCL_OP_CREATOR(SoftmaxBufCreator, OpType_Softmax, BUFFER);
 } // namespace OpenCL
 } // namespace MNN
 #endif/* MNN_OPENCL_BUFFER_CLOSED */
-

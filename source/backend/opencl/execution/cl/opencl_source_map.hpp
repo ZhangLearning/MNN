@@ -3,98 +3,54 @@
 #include <vector> 
 #include <mutex> 
 namespace MNN { 
-extern const char* conv_2d;
-extern const char* deconv_2d;
-extern const char* unary;
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* grid_sample_buf;
-#endif
-extern const char* interp;
-extern const char* select;
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* range_buf;
-#endif
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* self_attention_buf;
-#endif
-extern const char* performance;
+extern const char* nearest;
 extern const char* winogradTransformSource2_3_1;
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* gemv_conv1x1_buf;
-#endif
-extern const char* raster;
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-#ifdef MNN_SUPPORT_INTEL_SUBGROUP
-extern const char* conv_2d_c1_subgroup_buf;
-#endif
-#endif
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* matmul_local_buf;
-#endif
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* conv_2d_int_buf;
-#endif
+extern const char* glmem_convert;
 #ifndef MNN_OPENCL_BUFFER_CLOSED
 extern const char* interp_buf;
 #endif
-extern const char* scale;
-extern const char* softmax;
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* binary_buf;
-#endif
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* raster_buf;
-#endif
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-#ifdef MNN_SUPPORT_INTEL_SUBGROUP
-extern const char* binary_subgroup_buf;
-#endif
-#endif
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-#ifdef MNN_SUPPORT_INTEL_SUBGROUP
-extern const char* depthwise_conv2d_subgroup_buf;
-#endif
-#endif
-extern const char* nearest;
 #ifndef MNN_OPENCL_BUFFER_CLOSED
 #ifdef MNN_SUPPORT_INTEL_SUBGROUP
 extern const char* pooling_subgroup_buf;
 #endif
 #endif
+extern const char* winogradTransformDest2_5_1;
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+extern const char* gather_buf;
+#endif
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+extern const char* grid_sample_buf;
+#endif
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+extern const char* input_transe_buf;
+#endif
+extern const char* softmax;
+extern const char* buffer_to_image;
+extern const char* scale;
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+#ifdef MNN_SUPPORT_INTEL_SUBGROUP
+extern const char* unary_subgroup_buf;
+#endif
+#endif
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+extern const char* conv_2d_int_buf;
+#endif
+extern const char* binary;
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+extern const char* reduction_buf;
+#endif
 #ifndef MNN_OPENCL_BUFFER_CLOSED
 extern const char* pooling_buf;
 #endif
-extern const char* winogradTransformSource2_5_1;
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* unary_buf;
-#endif
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* depthwise_conv2d_buf;
-#endif
-extern const char* glmem_convert;
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* winogradTransform_buf;
-#endif
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-#ifdef MNN_SUPPORT_INTEL_SUBGROUP
-extern const char* winogradTransform_subgroup_buf;
-#endif
-#endif
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* splitgelu_buf;
-#endif
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* select_buf;
-#endif
-extern const char* grid_sample;
-extern const char* buffer_convert_quant;
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* gemm_buf;
-#endif
-extern const char* copy_buffer_to_image2d;
 extern const char* loop;
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* argmax_buf;
+extern const char* matmul_buf;
+#endif
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+extern const char* gemm_conv1x1_buf;
+#endif
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+extern const char* groupnorm_buf;
 #endif
 #ifndef MNN_OPENCL_BUFFER_CLOSED
 #ifdef MNN_SUPPORT_INTEL_SUBGROUP
@@ -102,171 +58,171 @@ extern const char* buffer_convert_subgroup_buf;
 #endif
 #endif
 #ifndef MNN_OPENCL_BUFFER_CLOSED
+#ifdef MNN_SUPPORT_INTEL_SUBGROUP
+extern const char* conv_2d_c1_subgroup_buf;
+#endif
+#endif
+extern const char* interp;
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+extern const char* binary_buf;
+#endif
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+extern const char* matmul_params_buf;
+#endif
+extern const char* buffer_convert_quant;
+#ifndef MNN_OPENCL_BUFFER_CLOSED
 extern const char* attention_buf;
 #endif
+extern const char* depthwise_conv2d;
+extern const char* grid_sample;
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* groupnorm_buf;
-#endif
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-#ifdef MNN_SUPPORT_INTEL_SUBGROUP
-extern const char* unary_subgroup_buf;
-#endif
+extern const char* gemv_conv1x1_buf;
 #endif
 extern const char* gemm;
+extern const char* deconv_2d;
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+#ifdef MNN_SUPPORT_INTEL_SUBGROUP
+extern const char* depthwise_conv2d_subgroup_buf;
+#endif
+#endif
+extern const char* performance;
 extern const char* depthwise_deconv2d;
-extern const char* range;
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* scale_buf;
+extern const char* winogradTransform_buf;
+#endif
+extern const char* layernorm;
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+#ifdef MNN_SUPPORT_INTEL_SUBGROUP
+extern const char* winogradTransform_subgroup_buf;
+#endif
 #endif
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* matmul_buf;
+extern const char* gemm_buf;
 #endif
-extern const char* pooling;
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* conv_2d_buf;
+extern const char* splitgelu_buf;
 #endif
-extern const char* buffer_to_image;
-extern const char* winogradTransformDest2_3_1;
+extern const char* matmul;
+extern const char* cast;
+extern const char* winogradTransformSource2_5_1;
 #ifndef MNN_OPENCL_BUFFER_CLOSED
 extern const char* layernorm_buf;
 #endif
+extern const char* pooling;
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* softmax_buf;
+extern const char* cast_buf;
 #endif
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* gather_buf;
+extern const char* conv_2d_buf;
+#endif
+extern const char* reduction;
+extern const char* conv_2d;
+extern const char* range;
+extern const char* unary;
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+extern const char* argmax_buf;
+#endif
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+extern const char* loop_buf;
+#endif
+extern const char* winogradTransformDest2_3_1;
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+extern const char* scale_buf;
 #endif
 #ifndef MNN_OPENCL_BUFFER_CLOSED
 #ifdef MNN_SUPPORT_INTEL_SUBGROUP
 extern const char* conv_2d_c16_subgroup_buf;
 #endif
 #endif
+extern const char* roi_pooling;
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* input_transe_buf;
+extern const char* matmul_local_buf;
 #endif
+extern const char* raster;
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* reduction_buf;
+extern const char* buffer_convert_buf;
 #endif
 #ifndef MNN_OPENCL_BUFFER_CLOSED
 extern const char* strassen_binary_buf;
 #endif
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* matmul_params_buf;
-#endif
-extern const char* cast;
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* buffer_convert_buf;
-#endif
-extern const char* matmul;
-extern const char* binary;
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* loop_buf;
-#endif
-extern const char* roi_pooling;
-extern const char* depthwise_conv2d;
-extern const char* layernorm;
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* gemm_conv1x1_buf;
-#endif
-extern const char* winogradTransformDest2_5_1;
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-extern const char* cast_buf;
-#endif
-extern const char* reduction;
-const std::map<std::string, const char*> OpenCLProgramMap = 
- { 
-  { "conv_2d", conv_2d },
-  { "deconv_2d", deconv_2d },
-  { "unary", unary },
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "grid_sample_buf", grid_sample_buf },
-#endif
-  { "interp", interp },
-  { "select", select },
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "range_buf", range_buf },
+extern const char* softmax_buf;
 #endif
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "self_attention_buf", self_attention_buf },
+extern const char* self_attention_buf;
 #endif
-  { "performance", performance },
-  { "winogradTransformSource2_3_1", winogradTransformSource2_3_1 },
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "gemv_conv1x1_buf", gemv_conv1x1_buf },
+extern const char* select_buf;
 #endif
-  { "raster", raster },
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+extern const char* raster_buf;
+#endif
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+extern const char* unary_buf;
+#endif
+extern const char* select;
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+extern const char* depthwise_conv2d_buf;
+#endif
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+extern const char* range_buf;
+#endif
+extern const char* copy_buffer_to_image2d;
 #ifndef MNN_OPENCL_BUFFER_CLOSED
 #ifdef MNN_SUPPORT_INTEL_SUBGROUP
-  { "conv_2d_c1_subgroup_buf", conv_2d_c1_subgroup_buf },
+extern const char* binary_subgroup_buf;
 #endif
 #endif
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "matmul_local_buf", matmul_local_buf },
-#endif
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "conv_2d_int_buf", conv_2d_int_buf },
-#endif
+const std::map<std::string, const char*> OpenCLProgramMap = 
+ { 
+  { "nearest", nearest },
+  { "winogradTransformSource2_3_1", winogradTransformSource2_3_1 },
+  { "glmem_convert", glmem_convert },
 #ifndef MNN_OPENCL_BUFFER_CLOSED
   { "interp_buf", interp_buf },
 #endif
-  { "scale", scale },
-  { "softmax", softmax },
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "binary_buf", binary_buf },
-#endif
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "raster_buf", raster_buf },
-#endif
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-#ifdef MNN_SUPPORT_INTEL_SUBGROUP
-  { "binary_subgroup_buf", binary_subgroup_buf },
-#endif
-#endif
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-#ifdef MNN_SUPPORT_INTEL_SUBGROUP
-  { "depthwise_conv2d_subgroup_buf", depthwise_conv2d_subgroup_buf },
-#endif
-#endif
-  { "nearest", nearest },
 #ifndef MNN_OPENCL_BUFFER_CLOSED
 #ifdef MNN_SUPPORT_INTEL_SUBGROUP
   { "pooling_subgroup_buf", pooling_subgroup_buf },
 #endif
 #endif
+  { "winogradTransformDest2_5_1", winogradTransformDest2_5_1 },
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+  { "gather_buf", gather_buf },
+#endif
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+  { "grid_sample_buf", grid_sample_buf },
+#endif
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+  { "input_transe_buf", input_transe_buf },
+#endif
+  { "softmax", softmax },
+  { "buffer_to_image", buffer_to_image },
+  { "scale", scale },
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+#ifdef MNN_SUPPORT_INTEL_SUBGROUP
+  { "unary_subgroup_buf", unary_subgroup_buf },
+#endif
+#endif
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+  { "conv_2d_int_buf", conv_2d_int_buf },
+#endif
+  { "binary", binary },
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+  { "reduction_buf", reduction_buf },
+#endif
 #ifndef MNN_OPENCL_BUFFER_CLOSED
   { "pooling_buf", pooling_buf },
 #endif
-  { "winogradTransformSource2_5_1", winogradTransformSource2_5_1 },
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "unary_buf", unary_buf },
-#endif
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "depthwise_conv2d_buf", depthwise_conv2d_buf },
-#endif
-  { "glmem_convert", glmem_convert },
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "winogradTransform_buf", winogradTransform_buf },
-#endif
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-#ifdef MNN_SUPPORT_INTEL_SUBGROUP
-  { "winogradTransform_subgroup_buf", winogradTransform_subgroup_buf },
-#endif
-#endif
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "splitgelu_buf", splitgelu_buf },
-#endif
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "select_buf", select_buf },
-#endif
-  { "grid_sample", grid_sample },
-  { "buffer_convert_quant", buffer_convert_quant },
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "gemm_buf", gemm_buf },
-#endif
-  { "copy_buffer_to_image2d", copy_buffer_to_image2d },
   { "loop", loop },
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "argmax_buf", argmax_buf },
+  { "matmul_buf", matmul_buf },
+#endif
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+  { "gemm_conv1x1_buf", gemm_conv1x1_buf },
+#endif
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+  { "groupnorm_buf", groupnorm_buf },
 #endif
 #ifndef MNN_OPENCL_BUFFER_CLOSED
 #ifdef MNN_SUPPORT_INTEL_SUBGROUP
@@ -274,76 +230,120 @@ const std::map<std::string, const char*> OpenCLProgramMap =
 #endif
 #endif
 #ifndef MNN_OPENCL_BUFFER_CLOSED
+#ifdef MNN_SUPPORT_INTEL_SUBGROUP
+  { "conv_2d_c1_subgroup_buf", conv_2d_c1_subgroup_buf },
+#endif
+#endif
+  { "interp", interp },
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+  { "binary_buf", binary_buf },
+#endif
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+  { "matmul_params_buf", matmul_params_buf },
+#endif
+  { "buffer_convert_quant", buffer_convert_quant },
+#ifndef MNN_OPENCL_BUFFER_CLOSED
   { "attention_buf", attention_buf },
 #endif
+  { "depthwise_conv2d", depthwise_conv2d },
+  { "grid_sample", grid_sample },
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "groupnorm_buf", groupnorm_buf },
-#endif
-#ifndef MNN_OPENCL_BUFFER_CLOSED
-#ifdef MNN_SUPPORT_INTEL_SUBGROUP
-  { "unary_subgroup_buf", unary_subgroup_buf },
-#endif
+  { "gemv_conv1x1_buf", gemv_conv1x1_buf },
 #endif
   { "gemm", gemm },
+  { "deconv_2d", deconv_2d },
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+#ifdef MNN_SUPPORT_INTEL_SUBGROUP
+  { "depthwise_conv2d_subgroup_buf", depthwise_conv2d_subgroup_buf },
+#endif
+#endif
+  { "performance", performance },
   { "depthwise_deconv2d", depthwise_deconv2d },
-  { "range", range },
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "scale_buf", scale_buf },
+  { "winogradTransform_buf", winogradTransform_buf },
+#endif
+  { "layernorm", layernorm },
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+#ifdef MNN_SUPPORT_INTEL_SUBGROUP
+  { "winogradTransform_subgroup_buf", winogradTransform_subgroup_buf },
+#endif
 #endif
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "matmul_buf", matmul_buf },
+  { "gemm_buf", gemm_buf },
 #endif
-  { "pooling", pooling },
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "conv_2d_buf", conv_2d_buf },
+  { "splitgelu_buf", splitgelu_buf },
 #endif
-  { "buffer_to_image", buffer_to_image },
-  { "winogradTransformDest2_3_1", winogradTransformDest2_3_1 },
+  { "matmul", matmul },
+  { "cast", cast },
+  { "winogradTransformSource2_5_1", winogradTransformSource2_5_1 },
 #ifndef MNN_OPENCL_BUFFER_CLOSED
   { "layernorm_buf", layernorm_buf },
 #endif
+  { "pooling", pooling },
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "softmax_buf", softmax_buf },
+  { "cast_buf", cast_buf },
 #endif
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "gather_buf", gather_buf },
+  { "conv_2d_buf", conv_2d_buf },
+#endif
+  { "reduction", reduction },
+  { "conv_2d", conv_2d },
+  { "range", range },
+  { "unary", unary },
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+  { "argmax_buf", argmax_buf },
+#endif
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+  { "loop_buf", loop_buf },
+#endif
+  { "winogradTransformDest2_3_1", winogradTransformDest2_3_1 },
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+  { "scale_buf", scale_buf },
 #endif
 #ifndef MNN_OPENCL_BUFFER_CLOSED
 #ifdef MNN_SUPPORT_INTEL_SUBGROUP
   { "conv_2d_c16_subgroup_buf", conv_2d_c16_subgroup_buf },
 #endif
 #endif
+  { "roi_pooling", roi_pooling },
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "input_transe_buf", input_transe_buf },
+  { "matmul_local_buf", matmul_local_buf },
 #endif
+  { "raster", raster },
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "reduction_buf", reduction_buf },
+  { "buffer_convert_buf", buffer_convert_buf },
 #endif
 #ifndef MNN_OPENCL_BUFFER_CLOSED
   { "strassen_binary_buf", strassen_binary_buf },
 #endif
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "matmul_params_buf", matmul_params_buf },
+  { "softmax_buf", softmax_buf },
 #endif
-  { "cast", cast },
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "buffer_convert_buf", buffer_convert_buf },
+  { "self_attention_buf", self_attention_buf },
 #endif
-  { "matmul", matmul },
-  { "binary", binary },
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "loop_buf", loop_buf },
+  { "select_buf", select_buf },
 #endif
-  { "roi_pooling", roi_pooling },
-  { "depthwise_conv2d", depthwise_conv2d },
-  { "layernorm", layernorm },
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "gemm_conv1x1_buf", gemm_conv1x1_buf },
+  { "raster_buf", raster_buf },
 #endif
-  { "winogradTransformDest2_5_1", winogradTransformDest2_5_1 },
 #ifndef MNN_OPENCL_BUFFER_CLOSED
-  { "cast_buf", cast_buf },
+  { "unary_buf", unary_buf },
 #endif
-  { "reduction", reduction },
+  { "select", select },
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+  { "depthwise_conv2d_buf", depthwise_conv2d_buf },
+#endif
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+  { "range_buf", range_buf },
+#endif
+  { "copy_buffer_to_image2d", copy_buffer_to_image2d },
+#ifndef MNN_OPENCL_BUFFER_CLOSED
+#ifdef MNN_SUPPORT_INTEL_SUBGROUP
+  { "binary_subgroup_buf", binary_subgroup_buf },
+#endif
+#endif
 };
 }
