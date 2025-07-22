@@ -6,10 +6,10 @@ IF (CMAKE_SYSTEM_NAME MATCHES "Linux" AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "G
     SET(LIB_TORCH_PATH "${CMAKE_CURRENT_BINARY_DIR}/libtorch/share/cmake")
     IF (EXISTS "/etc/redhat-release")
         # redhat force _GLIBCXX_USE_CXX11_ABI=0
-        SET(LIB_TORCH_NAME "libtorch-shared-with-deps-1.9.0%2Bcpu.zip")
+        SET(LIB_TORCH_NAME "libtorch-shared-with-deps-2.7.1%2Bcpu.zip")
     ELSE()
         # ubuntu MNN use _GLIBCXX_USE_CXX11_ABI=1
-        SET(LIB_TORCH_NAME "libtorch-cxx11-abi-shared-with-deps-1.9.0%2Bcpu.zip")
+        SET(LIB_TORCH_NAME "libtorch-cxx11-abi-shared-with-deps-2.7.1%2Bcpu.zip")
     ENDIF()
     STRING(REPLACE "%2B" "+" LIB_TORCH_ZIP ${LIB_TORCH_NAME})
     IF (NOT EXISTS ${LIB_TORCH_PATH})

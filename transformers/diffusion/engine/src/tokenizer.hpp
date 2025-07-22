@@ -1,13 +1,14 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <cstdint> //fix riscv build error
 
 #ifndef MNN_DIFFUSION_TOKENIZER_HPP
 #define MNN_DIFFUSION_TOKENIZER_HPP
 
 namespace MNN {
 namespace DIFFUSION {
-    
+
 class Tokenizer {
 public:
     Tokenizer() = default;
@@ -38,24 +39,24 @@ class CLIPTokenizer : public Tokenizer{
         }
     };
     using BPERanks = std::unordered_map<std::pair<std::wstring, std::wstring>, int, hash_pair_wstring>;
-    
+
 public:
     CLIPTokenizer() = default;
     virtual bool load(const std::string& filePath) override;
     virtual std::vector<int> encode(const std::string& sentence, int maxlen = 0) override;
-    
+
 private:
     bool loadVocab(const std::string& vocabFilePath);
     bool loadMerges(const std::string& mergesFilePath);
-    
+
 private:
     void bpe(const std::wstring& token, const BPERanks& bpe_ranks, std::vector<std::wstring>* result);
     BPERanks bpe_ranks_;
     std::unordered_map<uint8_t, wchar_t> b2u_;
     std::unordered_map<wchar_t, uint8_t> u2b_;
-    
+
     std::unordered_map<std::wstring, int> mVocabs;
-    
+
     int mStartIdx = 49406;
     int mEndIdx = 49407;
 };

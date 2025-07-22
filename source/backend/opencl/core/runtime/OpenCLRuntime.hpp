@@ -149,16 +149,16 @@ public:
 
     unsigned int mQueueCount = 0;
     unsigned int getQueueNum();
-    
+
     unsigned int mKernelTime = 0;
-    
-    
+
+
     std::map<std::vector<uint32_t>, std::vector<uint32_t>>& tunedGemmParamsMap();
 
     std::map<std::pair<std::string, std::vector<uint32_t>>, TuneInfo>& tunedLwsMap();
-    
+
     std::map<std::string, std::vector<TuneInfo>>& getTuneLwsMap();
-    
+
     std::shared_ptr<KernelWrap> buildKernel(const std::string &programName, const std::string &kernelName,
                              const std::set<std::string> &buildOptions, int precisionLevel, const Tensor *input = nullptr, const Tensor *output = nullptr);
     std::shared_ptr<KernelWrap> buildKernelWithCache(const std::string &programName, const std::string &kernelName,
@@ -174,7 +174,7 @@ public:
     float flops() const {
         return mFlops;
     }
-    
+
     bool canShareRuntime(int platformSize, int platformId, int deviceId, void *contextPtr){
         return (platformSize == mInitInfo.platformSize) && (platformId == mInitInfo.platformId) && (deviceId == mInitInfo.deviceId) && (contextPtr == mInitInfo.contextPtr);
     }
@@ -236,7 +236,7 @@ private:
     std::string mDefaultBuildParams;
     float mFlops = 4.0f;
     bool mIsCreateError{false};
-    
+
     double mStartNanos;
     double mStopNanos;
 

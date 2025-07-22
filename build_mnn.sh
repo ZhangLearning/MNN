@@ -2,22 +2,26 @@ rm -rf ./build
 mkdir ./build
 
 pushd ./build
+
 cmake .. \
-    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-    -DCMAKE_BUILD_TYPE=Debug    \
-    -G "Unix Makefiles" \
-    -DCMAKE_C_COMPILER=/usr/bin/gcc-10 \
-    -DCMAKE_CXX_COMPILER=/usr/bin/g++-10 \
-    -DMNN_OPENCL=ON \
-    -DMNN_ARM82=OFF \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
     -DMNN_LOW_MEMORY=true \
     -DMNN_CPU_WEIGHT_DEQUANT_GEMM=true \
-    -DMNN_GPU_TIME_PROFILE=true \
     -DMNN_BUILD_LLM=true \
     -DMNN_SUPPORT_TRANSFORMER_FUSE=true \
-    -DMNN_AVX512=false \
+    -DMNN_ARM82=false \
+    -DMNN_USE_LOGCAT=true \
+    -DMNN_OPENCL=true \
+    -DLLM_SUPPORT_VISION=true \
+    -DMNN_BUILD_OPENCV=true \
+    -DMNN_IMGCODECS=true \
+    -DLLM_SUPPORT_AUDIO=true \
+    -DMNN_BUILD_AUDIO=true \
+    -DMNN_BUILD_DIFFUSION=ON \
     -DMNN_SEP_BUILD=OFF \
     -DMNN_BUILD_CONVERTER=ON \
+    -DMNN_AVX512=false \
     -DMNN_BUILD_TEST=true
 
 make -j8

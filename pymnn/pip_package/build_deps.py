@@ -23,14 +23,14 @@ BUILD_DIR = 'pymnn_build' # avoid overwrite temporary product when build pymnn
 USE_TRT      = False
 USE_CUDA     = False
 USE_CUDA_TUNE= False
-USE_OPENCL   = False
+USE_OPENCL   = True
 USE_VULKAN   = False
-USE_TORCH    = False
+USE_TORCH    = True
 USE_INTERNAL = False
 USE_RENDER   = False
-USE_SSE      = True
+USE_SSE      = False
 USE_OPENMP   = False
-USE_LLM      = False
+USE_LLM      = True
 USE_ARM82    = False
 
 if len(sys.argv) > 1 and sys.argv[1] != None:
@@ -113,7 +113,7 @@ def build_deps():
         os.system('cmake ' + extra_opts +
             '-DMNN_BUILD_CONVERTER=on -DMNN_BUILD_TRAIN=ON -DCMAKE_BUILD_TYPE=Release \
             -DMNN_BUILD_SHARED_LIBS=OFF -DMNN_AAPL_FMWK=OFF -DMNN_SEP_BUILD=OFF -DMNN_BUILD_OPENCV=ON -DMNN_IMGCODECS=ON \
-            -DMNN_BUILD_AUDIO=ON  .. && make MNN MNNTrain MNNConvertDeps -j32')
+            -DMNN_BUILD_AUDIO=ON  .. && make MNN MNNTrain MNNConvertDeps -j8')
     else:
         extra_opts += ' -DMNN_INTERNAL=ON ' if USE_INTERNAL else ' '
         extra_opts += ' -DMNN_BUILD_TORCH=ON ' if USE_TORCH else ' '
@@ -121,7 +121,7 @@ def build_deps():
         os.system('cmake ' + extra_opts + '-DMNN_BUILD_CONVERTER=on -DMNN_BUILD_TRAIN=ON -DCMAKE_BUILD_TYPE=Release \
             -DMNN_BUILD_SHARED_LIBS=ON -DMNN_AAPL_FMWK=OFF -DMNN_SEP_BUILD=OFF\
             -DMNN_BUILD_OPENCV=ON -DMNN_IMGCODECS=ON -DMNN_BUILD_AUDIO=ON\
-            .. && make MNN MNNConvertDeps -j64')
+            .. && make MNN MNNConvertDeps -j8')
 ################################################################################
 # Building dependent libraries
 ################################################################################

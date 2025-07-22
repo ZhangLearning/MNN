@@ -237,7 +237,7 @@ linux_build() {
     mkdir build
     pushd build
     # copy libtorch avoid wget, speed up ci build
-    cp ~/libtorch-cxx11-abi-shared-with-deps-1.9.0+cpu.zip .
+    cp ~/libtorch-cxx11-abi-shared-with-deps-2.7.1+cpu.zip .
     cmake .. \
         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
         -DCMAKE_BUILD_TYPE=Release \

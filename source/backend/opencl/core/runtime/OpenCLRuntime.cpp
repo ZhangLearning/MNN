@@ -168,8 +168,8 @@ OpenCLRuntime::OpenCLRuntime(int platformSize, int platformId, int deviceId, voi
                     mMaxThreadsPerDevice =  maxThreadsPerExecutionUnit * execution_units_count;
                 }
 #endif
-            } else if (deviceVendor.find("Sietium") != std::string::npos) {
-                mGpuType = SIETIUM;
+            // } else if (deviceVendor.find("Sietium") != std::string::npos) {
+            //     mGpuType = SIETIUM;
             }
             else {
                 mGpuType = OTHER;

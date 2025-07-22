@@ -1,5 +1,6 @@
+-f https://download.pytorch.org/whl/torch_stable.html
 datasets
-MNN
+# MNN
 onnx
 onnxslim
 onnxruntime
@@ -7,7 +8,7 @@ peft
 Pillow
 Requests
 sentencepiece
-torch
+#torch
 tqdm
 transformers
 yaspin
